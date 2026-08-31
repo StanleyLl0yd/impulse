@@ -1,0 +1,254 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag, for example v0.1.0
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: android-release-${{ github.ref }}-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+
+jobs:
+  validate:
+    name: Validate release request
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Validate tag format
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+      - name: Checkout release tag
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate tag source and app version
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor HEAD origin/main
+          version_name="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          version_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -1)"
+          test -n "$version_name"
+          test -n "$version_code"
+          test "$RELEASE_TAG" = "v$version_name"
+          echo "Validated $RELEASE_TAG with versionCode $version_code"
+
+  build-sign:
+    name: Test, build, sign, and attest
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+
+      - name: Set up Android build environment
+        uses: ./.github/actions/android-gradle-setup
+        with:
+          gradle-cache-read-only: true
+
+      - name: Install Android 37 platform
+        run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
+
+      - name: Restore and validate release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_CERT_SHA256: ${{ secrets.ANDROID_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          test -n "$ANDROID_CERT_SHA256"
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/impulse-release.jks"
+          test -s "$RUNNER_TEMP/impulse-release.jks"
+          keytool -list \
+            -keystore "$RUNNER_TEMP/impulse-release.jks" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" >/dev/null
+
+      - name: Test and lint release source
+        run: ./gradlew testDebugUnitTest lintDebug --stacktrace
+
+      - name: Build signed APK and AAB
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/impulse-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease bundleRelease --stacktrace
+
+      - name: Verify signatures and package release
+        id: package
+        env:
+          EXPECTED_CERT_SHA256: ${{ secrets.ANDROID_CERT_SHA256 }}
+          LC_ALL: C.UTF-8
+        run: |
+          set -euo pipefail
+          source_apk="app/build/outputs/apk/release/app-release.apk"
+          source_aab="app/build/outputs/bundle/release/app-release.aab"
+          test -s "$source_apk"
+          test -s "$source_aab"
+
+          expected="$(printf '%s' "$EXPECTED_CERT_SHA256" | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner -print | sort -V | tail -1)"
+          test -n "$apksigner"
+
+          apk_report="$RUNNER_TEMP/apksigner-report.txt"
+          "$apksigner" verify --verbose --print-certs "$source_apk" | tee "$apk_report"
+          grep -F 'Verified using v2 scheme (APK Signature Scheme v2): true' "$apk_report"
+          grep -F 'Verified using v3 scheme (APK Signature Scheme v3): true' "$apk_report"
+          grep -F 'Number of signers: 1' "$apk_report"
+          apk_fingerprint="$(awk -F': ' '/certificate SHA-256 digest:/ {print $NF; exit}' "$apk_report" | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          test "$apk_fingerprint" = "$expected"
+
+          jarsigner -verify "$source_aab" | tee "$RUNNER_TEMP/jarsigner-report.txt"
+          grep -F 'jar verified.' "$RUNNER_TEMP/jarsigner-report.txt"
+          aab_fingerprint="$(keytool -printcert -jarfile "$source_aab" | awk -F': ' '/SHA256:/ {print $NF; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          test "$aab_fingerprint" = "$expected"
+
+          mkdir -p release
+          version="${RELEASE_TAG#v}"
+          apk_path="release/Impulse-$version.apk"
+          aab_path="release/Impulse-$version.aab"
+          checksum_path="release/Impulse-$version.sha256"
+          cp "$source_apk" "$apk_path"
+          cp "$source_aab" "$aab_path"
+          (
+            cd release
+            sha256sum "Impulse-$version.apk" "Impulse-$version.aab" > "Impulse-$version.sha256"
+            sha256sum --check "Impulse-$version.sha256"
+          )
+          echo "apk_path=$apk_path" >> "$GITHUB_OUTPUT"
+          echo "aab_path=$aab_path" >> "$GITHUB_OUTPUT"
+          echo "checksum_path=$checksum_path" >> "$GITHUB_OUTPUT"
+
+      - name: Attest release APK and AAB
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: |
+            ${{ steps.package.outputs.apk_path }}
+            ${{ steps.package.outputs.aab_path }}
+
+      - name: Upload signed package
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: impulse-${{ env.RELEASE_TAG }}-signed
+          path: |
+            ${{ steps.package.outputs.apk_path }}
+            ${{ steps.package.outputs.aab_path }}
+            ${{ steps.package.outputs.checksum_path }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/impulse-release.jks"
+
+  publish:
+    name: Publish GitHub release
+    needs: build-sign
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+
+      - name: Download signed package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: impulse-${{ env.RELEASE_TAG }}-signed
+          path: release
+
+      - name: Refuse an existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists." >&2
+            exit 1
+          fi
+
+      - name: Create draft release
+        id: draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          notes_file=".github/release-notes/$RELEASE_TAG.md"
+          if [[ -f "$notes_file" ]]; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "IMPULSE ${RELEASE_TAG#v}" \
+              --notes-file "$notes_file" \
+              --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "IMPULSE ${RELEASE_TAG#v}" \
+              --generate-notes \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Attach verified assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          gh release upload "$RELEASE_TAG" \
+            "release/Impulse-$version.apk" \
+            "release/Impulse-$version.aab" \
+            "release/Impulse-$version.sha256" \
+            --repo "$GITHUB_REPOSITORY"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --repo "$GITHUB_REPOSITORY"
+
+      - name: Remove failed draft
+        if: failure() && steps.draft.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete "$RELEASE_TAG" --yes --repo "$GITHUB_REPOSITORY"

@@ -1,0 +1,82 @@
+name: Security and Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "47 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      image: semgrep/semgrep:1.172.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Run Semgrep CE
+        run: semgrep scan --config p/security-audit --config p/secrets --error --metrics=off .
+
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan repository for secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+
+  qodana:
+    name: Qodana
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Android build environment
+        uses: ./.github/actions/android-gradle-setup
+        with:
+          gradle-cache-read-only: true
+
+      - name: Install Android 37 platform
+        run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
+
+      - name: Prepare Gradle dependencies
+        run: ./gradlew :app:dependencies --stacktrace
+
+      - name: Run Qodana
+        uses: JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692
+        with:
+          args: --within-docker,false,--print-problems
+          upload-result: true
+          artifact-name: qodana-report

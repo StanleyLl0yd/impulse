@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">IMPULSE</string>
+    <string name="game_hint">Коснитесь один раз, чтобы запустить цепную реакцию</string>
+    <string name="retry">Ещё раз</string>
+</resources>

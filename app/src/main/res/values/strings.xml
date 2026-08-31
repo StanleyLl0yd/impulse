@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">IMPULSE</string>
+    <string name="game_hint">Tap once to start a chain reaction</string>
+    <string name="retry">Retry</string>
+</resources>
