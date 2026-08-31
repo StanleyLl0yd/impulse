@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -315,6 +314,7 @@ private fun SettingRow(
     testTag: String,
 ) {
     Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -322,7 +322,6 @@ private fun SettingRow(
             text = label,
             color = Color.White.copy(alpha = 0.86f),
             fontSize = 14.sp,
-            modifier = Modifier.weight(1f),
         )
         Switch(
             checked = checked,
