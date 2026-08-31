@@ -38,7 +38,7 @@ Windows:
 
 ## Release model
 
-Official releases are tag-driven (`vMAJOR.MINOR.PATCH`). Release signing uses a dedicated IMPULSE key stored only as GitHub Environment secrets. The workflow verifies APK/AAB signatures, checks certificate SHA-256, generates checksums, creates attestations, and publishes a GitHub Release.
+Official releases are tag-driven (`vMAJOR.MINOR.PATCH`). Release signing uses an owner-provided key stored only as GitHub Environment secrets for CI. The workflow verifies APK/AAB signatures, checks certificate SHA-256, generates checksums, creates attestations, and publishes a GitHub Release.
 
 See [docs/RELEASE.md](docs/RELEASE.md).
 
