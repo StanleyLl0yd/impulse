@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.3.0 - 2026-08-31
+
+### Added
+
+- Cinematic launch splash using the IMPULSE chain-reaction artwork, fading from pure black to full visibility over three seconds before gameplay starts.
+- Black Android 12+ native splash handoff so the app opens without flashing the launcher icon before the cinematic artwork appears.
+
+### Changed
+
+- Launch instrumentation tests now advance through the splash before asserting gameplay UI.
+
 ## 0.2.0 - 2026-08-31
 
 ### Added

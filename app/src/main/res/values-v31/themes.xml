@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Impulse" parent="Theme.Impulse.Base">
+        <item name="android:windowSplashScreenBackground">#000000</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#000000</item>
+    </style>
+</resources>

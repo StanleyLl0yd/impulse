@@ -14,7 +14,7 @@ class ImpulseLaunchTest {
 
     @Test
     fun gameCanvasIsDisplayed() {
-        composeRule.mainClock.autoAdvance = false
+        finishSplash()
         composeRule.onNodeWithTag("game-canvas").assertExists()
         composeRule.onNodeWithTag("game-hint").assertExists()
         composeRule.onNodeWithTag("settings-button").assertExists()
@@ -22,7 +22,7 @@ class ImpulseLaunchTest {
 
     @Test
     fun gameFeelSettingsAreAvailable() {
-        composeRule.mainClock.autoAdvance = false
+        finishSplash()
 
         composeRule.onNodeWithTag("settings-button").performClick()
         composeRule.mainClock.advanceTimeByFrame()
@@ -34,7 +34,7 @@ class ImpulseLaunchTest {
 
     @Test
     fun tapResultAndRetryFlowWorks() {
-        composeRule.mainClock.autoAdvance = false
+        finishSplash()
 
         composeRule.onNodeWithTag("game-canvas").performTouchInput { click() }
         composeRule.mainClock.advanceTimeBy(100)
@@ -46,5 +46,11 @@ class ImpulseLaunchTest {
         composeRule.onNodeWithTag("retry").performClick()
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithTag("game-hint").assertExists()
+    }
+
+    private fun finishSplash() {
+        composeRule.mainClock.autoAdvance = false
+        composeRule.mainClock.advanceTimeBy(3_100)
+        composeRule.mainClock.advanceTimeByFrame()
     }
 }
