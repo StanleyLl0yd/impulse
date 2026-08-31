@@ -19,3 +19,5 @@
 - Maintain Russian and English user-facing strings.
 - Treat frame pacing, deterministic behavior, instant retry, and offline operation as product requirements.
 - Keep `main` buildable and use focused commits/PRs.
+- After every release, review and update all repository text files so they accurately reflect the released state.
+- Preserve the established formatting and visual presentation of text files during release updates; add, change, or remove formatting only when there is a compelling need.
