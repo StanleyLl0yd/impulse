@@ -1,30 +1,90 @@
-# IMPULSE
+<div align="center">
 
-Minimalist chain-reaction puzzle game for Android. One tap. One impulse. Maximum chain.
+# ◉ IMPULSE
 
-[Русский README](README_RU.md)
+### ONE TAP · ONE IMPULSE · MAXIMUM CHAIN
 
-## Status
+`○ · ○ · ◎ ))) ◉ ✦ ✦ ✦`
 
-Early playable prototype (`0.1.0`). The repository is intentionally small and offline-first.
+[![Android CI](https://img.shields.io/github/actions/workflow/status/StanleyLl0yd/impulse/ci.yml?branch=main&label=CI&labelColor=050814&color=00E5FF)](https://github.com/StanleyLl0yd/impulse/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/StanleyLl0yd/impulse?label=release&labelColor=050814&color=9E4DFF)](https://github.com/StanleyLl0yd/impulse/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/StanleyLl0yd/impulse/total?label=downloads&labelColor=050814&color=00E5FF)](https://github.com/StanleyLl0yd/impulse/releases)
+[![Android 8+](https://img.shields.io/badge/Android-8.0%2B-00E5FF?labelColor=050814&logo=android&logoColor=8FF8FF)](https://github.com/StanleyLl0yd/impulse)
+[![Offline](https://img.shields.io/badge/network-offline-9E4DFF?labelColor=050814)](https://github.com/StanleyLl0yd/impulse)
+[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-9E4DFF?labelColor=050814)](LICENSE)
 
-## Core loop
+[![English](https://img.shields.io/badge/lang-EN-00E5FF?labelColor=050814)](README.md)
+[![Русский](https://img.shields.io/badge/lang-RU-9E4DFF?labelColor=050814)](README_RU.md)
+
+A minimalist one-touch chain-reaction puzzle for Android.
+
+</div>
+
+Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
+
+Current source version: **0.1.0** (`versionCode 1`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+
+## ⚡ The idea
 
 1. Watch the particles move.
-2. Tap once to create an expanding impulse.
-3. Trigger particles and let the chain reaction propagate.
-4. Reach the target or retry immediately.
+2. Tap once to place the only player impulse.
+3. Let the wave expand and trigger nearby particles.
+4. Triggered particles emit their own waves.
+5. Reach the target before the reaction dies out — or retry immediately.
 
-## Technical baseline
+The prototype currently starts with **20 moving particles** and requires **12 activations** for success.
 
-- Kotlin
-- Jetpack Compose
-- Custom deterministic 2D simulation
-- `minSdk 26`, `targetSdk 37`, `compileSdk 37`
-- Gradle 9.5.0, AGP 9.3.2, Kotlin 2.4.10
+> One tap. One impulse. Maximum chain.
+
+## ✨ Current prototype
+
+- One-touch gameplay with a single impulse per attempt
+- Moving particles with wall reflection
+- Expanding player and reaction waves
+- Chain depth tracking and triggered-particle counter
+- Instant retry with a new deterministic seed
+- Frame-rate-independent fixed-step simulation
+- Near-black playfield with electric cyan particles and violet/magenta chain reactions
+- Russian and English interface resources
+- Portrait-first Android experience
 - No account, backend, analytics, ads, or network permission
 
-## Build
+The current build is deliberately focused on one question: **is the chain reaction itself satisfying enough to build the full game around it?**
+
+## 🎮 Game feel
+
+IMPULSE is designed around clarity and escalation rather than visual noise:
+
+- **idle** — cool cyan particles move quietly across the field;
+- **tap** — one cyan impulse expands from the chosen point;
+- **chain** — triggered particles switch to violet/magenta and emit new waves;
+- **result** — the field resolves quickly so another attempt is never far away.
+
+The simulation is deterministic and seedable so the same level state can be reproduced across devices and tests, while rendering remains free to run at the display refresh rate.
+
+## 📦 Installation
+
+There is no public binary release yet. Until the first tagged release is published, build the project from source.
+
+Official signed APK and AAB files will be published only through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases).
+
+Android 8.0 or newer is required.
+
+## 🛠️ Build from source
+
+Requirements:
+
+- JDK 17
+- Android SDK 37
+- Gradle 9.5.0 through the repository Gradle Wrapper
+
+```bash
+git clone https://github.com/StanleyLl0yd/impulse.git
+cd impulse
+./gradlew assembleDebug
+```
+
+Run the main local verification:
 
 ```bash
 ./gradlew testDebugUnitTest lintDebug assembleDebug
@@ -36,16 +96,110 @@ Windows:
 .\gradlew.bat testDebugUnitTest lintDebug assembleDebug
 ```
 
-## Release model
+## 🧱 Technology
 
-Official releases are tag-driven (`vMAJOR.MINOR.PATCH`). Release signing uses an owner-provided key stored only as GitHub Environment secrets for CI. The workflow verifies APK/AAB signatures, checks certificate SHA-256, generates checksums, creates attestations, and publishes a GitHub Release.
+| Category | Technology |
+| --- | --- |
+| Language | Kotlin 2.4.10 |
+| UI | Jetpack Compose + Material 3 |
+| Rendering | Compose Canvas |
+| Simulation | Custom deterministic fixed-step 2D engine |
+| Build | Gradle 9.5.0, AGP 9.3.2, Kotlin DSL |
+| Android | minSdk 26, targetSdk 37, compileSdk 37 |
 
-See [docs/RELEASE.md](docs/RELEASE.md).
+Gameplay state and simulation are kept separate from rendering so visual polish can evolve without turning the renderer into the game engine.
 
-## Security
+## ✅ Quality and security checks
 
-See [SECURITY.md](SECURITY.md). Repository security automation includes CodeQL, Semgrep, Gitleaks, Qodana, Dependabot, pinned GitHub Actions and least-privilege workflow permissions.
+Pull requests and pushes to `main` are automatically checked with:
 
-## License
+- unit tests;
+- Android Lint;
+- debug and release APK/AAB assembly;
+- Android instrumentation-test compilation;
+- runtime instrumentation tests on API 37;
+- weekly runtime coverage on the minimum API 26;
+- CodeQL for Java/Kotlin;
+- Semgrep security and secret rules;
+- Gitleaks across full Git history;
+- scheduled/manual Qodana analysis.
 
-PolyForm Noncommercial License 1.0.0. See [LICENSE](LICENSE).
+Third-party GitHub Actions are pinned to immutable commit SHAs, workflow permissions follow least privilege, and the protected `main` branch requires `Verify`, `Analyze Java and Kotlin`, `Semgrep`, and `Gitleaks` before squash merge.
+
+Security issues should be reported according to [SECURITY.md](SECURITY.md).
+
+## 🔐 Release integrity
+
+Official releases are tag-driven with `vMAJOR.MINOR.PATCH` tags that must match `versionName`.
+
+The Android Release workflow:
+
+1. validates the tag and source version;
+2. runs tests and Android Lint;
+3. restores the owner-provided signing key only inside the protected `release` environment;
+4. builds signed APK and AAB artifacts;
+5. verifies APK Signature Schemes v2/v3, signer count, and the expected certificate SHA-256 for both APK and AAB;
+6. generates SHA-256 checksums;
+7. creates GitHub artifact attestations for APK and AAB;
+8. publishes a GitHub Release only after verification succeeds.
+
+The keystore and signing passwords are never stored in the repository. See [docs/RELEASE.md](docs/RELEASE.md).
+
+## 🔒 Privacy
+
+- **Offline by default** — the app does not request Android `INTERNET` permission
+- **No account, analytics, tracking, or advertising**
+- No backend or cloud dependency
+- No dangerous Android runtime permissions in the current scope
+
+This boundary is intentional and remains the default unless a future feature has a concrete reason to change it.
+
+## 🌍 Languages
+
+- English — default
+- Русский
+
+The interface follows the device language through Android resources.
+
+## 🗺 Roadmap
+
+- **Prototype:** prove the one-tap chain reaction and game feel
+- **Next:** visual/audio/haptic polish and stronger instant-retry feedback
+- **Then:** level definitions, progression, scoring, and persistence
+- **Content:** roughly 60 handcrafted/generated levels for the first complete release
+- **Later:** endless mode and daily challenge only after the core game is proven
+
+The product direction is tracked in [PROJECT.md](PROJECT.md).
+
+## 📊 Changelog
+
+- [CHANGELOG.md](CHANGELOG.md)
+- [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases)
+
+## 🤝 Contributing
+
+Bug reports and focused pull requests are welcome.
+
+Keep changes small, preserve deterministic gameplay and the offline-first boundary, avoid unnecessary dependencies, and include tests for gameplay or regression changes where practical. Project-specific rules are documented in [AGENTS.md](AGENTS.md).
+
+## 📄 License
+
+IMPULSE is licensed under the **PolyForm Noncommercial License 1.0.0**.
+
+Noncommercial use, copying, modification, and distribution are permitted under the license terms. Commercial use requires a separate agreement. See [LICENSE](LICENSE) for the authoritative text.
+
+Copyright © 2026 Stanley Lloyd.
+
+## 👨‍💻 Author
+
+**Stanley Lloyd** · [@StanleyLl0yd](https://github.com/StanleyLl0yd)
+
+---
+
+<div align="center">
+
+`○ wait · ◎ tap · ◉ expand · ✦ chain`
+
+**ONE TAP · ONE IMPULSE · MAXIMUM CHAIN**
+
+</div>
