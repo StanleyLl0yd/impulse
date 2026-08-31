@@ -1,0 +1,40 @@
+name: Recover splash candidates
+
+on:
+  push:
+    branches:
+      - fix/splash-audio-0.3.1
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    name: Recover historical splash candidates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Recover candidates
+        run: |
+          set -euo pipefail
+          mkdir -p recovered
+          git show 41c586c3858df24d356cf42e96145423cccfebc2:docs/candidate-10a.bin > recovered/candidate-10a.bin
+          git show 41c586c3858df24d356cf42e96145423cccfebc2:docs/candidate-b7f.bin > recovered/candidate-b7f.bin
+          git show 41c586c3858df24d356cf42e96145423cccfebc2:docs/candidate-c661.bin > recovered/candidate-c661.bin
+          file recovered/*
+          sha256sum recovered/*
+
+      - name: Upload recovered candidates
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: recovered-splash-candidates
+          path: recovered/
+          if-no-files-found: error
+          retention-days: 1
