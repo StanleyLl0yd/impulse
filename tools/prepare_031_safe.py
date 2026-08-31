@@ -6,7 +6,7 @@ import struct
 import wave
 
 root = Path('.')
-old_id = 'io.github.stanleyll0yd.impulse'
+old_id = 'com.sl.impulse'
 new_id = 'com.sl.impulse'
 
 moves = {

@@ -23,6 +23,7 @@ The central rule is: **one tap, one impulse, one chain reaction**.
 - Kotlin and Jetpack Compose.
 - Custom lightweight 2D rendering/simulation; no game engine unless profiling or requirements justify it.
 - `minSdk 26`, `targetSdk 37`, `compileSdk 37`.
+- Permanent Android Application ID / Bundle ID and namespace: `com.sl.impulse`.
 - Deterministic fixed-step simulation at 60 Hz with seedable randomness.
 - Interpolated rendering may run at the display refresh rate without changing simulation outcomes.
 - A canonical 9:16 logical playfield keeps gameplay geometry independent from device aspect ratio.
