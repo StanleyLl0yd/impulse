@@ -34,6 +34,7 @@ data class ParticleSnapshot(
     val radius: Double,
     val triggered: Boolean,
     val chainDepth: Int,
+    val triggeredAgeSeconds: Double,
 )
 
 data class WaveSnapshot(
@@ -70,6 +71,7 @@ class GameEngine(
         val radius: Double,
         var triggered: Boolean = false,
         var chainDepth: Int = 0,
+        var triggeredAgeSeconds: Double = 0.0,
     )
 
     private data class Wave(
@@ -154,6 +156,7 @@ class GameEngine(
     )
 
     private fun tick(step: Double) {
+        ageTriggeredParticles(step)
         moveParticles(step)
         expandWaves(step)
         triggerCollisions()
@@ -163,6 +166,12 @@ class GameEngine(
             finished = true
             cachedTriggeredCount = particles.count { it.triggered }
             success = cachedTriggeredCount >= requiredCount
+        }
+    }
+
+    private fun ageTriggeredParticles(step: Double) {
+        for (particle in particles) {
+            if (particle.triggered) particle.triggeredAgeSeconds += step
         }
     }
 
@@ -206,6 +215,7 @@ class GameEngine(
 
             particle.triggered = true
             particle.chainDepth = source.chainDepth + 1
+            particle.triggeredAgeSeconds = 0.0
             maximumChainDepth = maxOf(maximumChainDepth, particle.chainDepth)
             newlyTriggered += particle
         }
@@ -270,6 +280,7 @@ class GameEngine(
                 radius = particle.radius,
                 triggered = particle.triggered,
                 chainDepth = particle.chainDepth,
+                triggeredAgeSeconds = particle.triggeredAgeSeconds,
             )
         }
         cachedWaves = waves.map { wave ->

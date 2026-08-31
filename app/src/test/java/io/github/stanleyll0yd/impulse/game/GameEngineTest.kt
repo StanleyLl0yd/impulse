@@ -52,6 +52,7 @@ class GameEngineTest {
         assertEquals(1, result.triggeredCount)
         assertTrue(result.success)
         assertEquals(1, result.maximumChainDepth)
+        assertTrue(result.particles.single().triggeredAgeSeconds > 0.0)
     }
 
     @Test
@@ -104,6 +105,22 @@ class GameEngineTest {
                 assertTrue(distance >= first.radius + second.radius)
             }
         }
+    }
+
+    @Test
+    fun largeChainReactionStressScenarioFinishes() {
+        val engine = GameEngine(seed = 31L, particleCount = 200, requiredCount = 100)
+        engine.tap(Vec2(GameField.DEFAULT.width / 2.0, GameField.DEFAULT.height / 2.0))
+
+        repeat(2_400) {
+            if (engine.snapshot().finished) return@repeat
+            engine.advance(1.0 / 60.0)
+        }
+
+        val result = engine.snapshot()
+        assertTrue(result.finished)
+        assertEquals(200, result.particles.size)
+        assertTrue(result.triggeredCount in 0..200)
     }
 
     @Test
