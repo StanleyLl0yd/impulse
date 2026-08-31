@@ -1,4 +1,4 @@
-name: Recover splash candidates
+name: Finalize splash asset
 
 on:
   push:
@@ -6,11 +6,12 @@ on:
       - fix/splash-audio-0.3.1
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  recover:
-    name: Recover historical splash candidates
+  finalize:
+    if: github.event.head_commit.message == 'ci: finalize valid splash asset'
+    name: Finalize valid splash asset
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 
@@ -19,22 +20,21 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-          persist-credentials: false
 
-      - name: Recover candidates
+      - name: Restore splash asset
         run: |
           set -euo pipefail
-          mkdir -p recovered
-          git show 41c586c3858df24d356cf42e96145423cccfebc2:docs/candidate-10a.bin > recovered/candidate-10a.bin
-          git show 41c586c3858df24d356cf42e96145423cccfebc2:docs/candidate-b7f.bin > recovered/candidate-b7f.bin
-          git show 41c586c3858df24d356cf42e96145423cccfebc2:docs/candidate-c661.bin > recovered/candidate-c661.bin
-          file recovered/*
-          sha256sum recovered/*
+          cat .tmp/splash-q100.b64.part-* | base64 --decode > app/src/main/res/drawable-nodpi/impulse_splash.webp
+          test "$(stat -c%s app/src/main/res/drawable-nodpi/impulse_splash.webp)" = "333140"
+          echo "5dd408690e083dc0220414f900705b5cd5b4f002ce46f4dc6d4538c327eca6f7  app/src/main/res/drawable-nodpi/impulse_splash.webp" | sha256sum --check
+          file app/src/main/res/drawable-nodpi/impulse_splash.webp
+          rm -rf .tmp
 
-      - name: Upload recovered candidates
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: recovered-splash-candidates
-          path: recovered/
-          if-no-files-found: error
-          retention-days: 1
+      - name: Commit restored asset
+        run: |
+          set -euo pipefail
+          git config user.name "Stanley Lloyd"
+          git config user.email "131160519+StanleyLl0yd@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: restore valid splash artwork"
+          git push origin HEAD:fix/splash-audio-0.3.1
