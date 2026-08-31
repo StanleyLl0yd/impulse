@@ -1,0 +1,231 @@
+package io.github.stanleyll0yd.impulse.feedback
+
+import android.content.Context
+import android.media.AudioAttributes
+import android.media.SoundPool
+import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.sin
+
+class GameSoundController(context: Context) {
+    private val loadedSamples = ConcurrentHashMap.newKeySet<Int>()
+    private val soundPool = SoundPool.Builder()
+        .setMaxStreams(8)
+        .setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build(),
+        )
+        .build()
+
+    private val impulseSound: Int
+    private val chainSound: Int
+    private val successSound: Int
+    private val nearMissSound: Int
+    private val failureSound: Int
+
+    init {
+        soundPool.setOnLoadCompleteListener { _, sampleId, status ->
+            if (status == 0) loadedSamples.add(sampleId)
+        }
+
+        val audioDirectory = File(context.cacheDir, "impulse-audio-v2").apply { mkdirs() }
+        impulseSound = load(audioDirectory, "impulse.wav", createImpulse())
+        chainSound = load(audioDirectory, "chain.wav", createChain())
+        successSound = load(audioDirectory, "success.wav", createSuccess())
+        nearMissSound = load(audioDirectory, "near-miss.wav", createNearMiss())
+        failureSound = load(audioDirectory, "failure.wav", createFailure())
+    }
+
+    fun playImpulse() {
+        play(impulseSound, volume = 0.54f)
+    }
+
+    fun playChain(chainDepth: Int, triggeredDelta: Int) {
+        val rate = (0.90f + chainDepth.coerceIn(0, 10) * 0.045f).coerceAtMost(1.35f)
+        val volume = (0.20f + triggeredDelta.coerceAtMost(4) * 0.035f).coerceAtMost(0.34f)
+        play(chainSound, volume = volume, rate = rate)
+    }
+
+    fun playResult(success: Boolean, nearMiss: Boolean) {
+        when {
+            success -> play(successSound, volume = 0.44f)
+            nearMiss -> play(nearMissSound, volume = 0.38f)
+            else -> play(failureSound, volume = 0.34f)
+        }
+    }
+
+    fun release() {
+        loadedSamples.clear()
+        soundPool.release()
+    }
+
+    private fun play(sampleId: Int, volume: Float, rate: Float = 1f) {
+        if (sampleId !in loadedSamples) return
+        soundPool.play(sampleId, volume, volume, 1, 0, rate)
+    }
+
+    private fun load(directory: File, name: String, samples: ShortArray): Int {
+        val file = File(directory, name)
+        if (!file.isFile || file.length() == 0L) writeWave(file, samples)
+        return soundPool.load(file.absolutePath, 1)
+    }
+
+    private fun createImpulse(): ShortArray {
+        val duration = 0.72
+        val signal = signal(duration) { time ->
+            val envelope = smoothAttack(time, 0.035) * exp(-2.7 * time / duration)
+            val bloom = 0.68 * chirp(time, duration, 185.0, 470.0) +
+                0.18 * chirp(time, duration, 370.0, 940.0, 0.35)
+            val lowPulse = 0.18 * sin(2.0 * PI * (96.0 + 34.0 * time / duration) * time)
+            val shimmer = 0.06 * chirp(time, duration, 720.0, 1180.0, 1.0)
+            (bloom + lowPulse + shimmer) * envelope
+        }
+        addEcho(signal, 62, 0.18)
+        addEcho(signal, 118, 0.10)
+        return pcm(signal, 0.58)
+    }
+
+    private fun createChain(): ShortArray {
+        val duration = 0.26
+        val signal = signal(duration) { time ->
+            val envelope = smoothAttack(time, 0.012) * exp(-4.0 * time / duration)
+            val body = 0.78 * chirp(time, duration, 350.0, 425.0) +
+                0.18 * sin(2.0 * PI * 700.0 * time + 0.2) +
+                0.08 * sin(2.0 * PI * 1050.0 * time + 0.6)
+            body * envelope
+        }
+        addEcho(signal, 48, 0.12)
+        return pcm(signal, 0.46)
+    }
+
+    private fun createSuccess(): ShortArray {
+        val duration = 0.95
+        val notes = listOf(
+            Note(0.00, 392.00, 0.42),
+            Note(0.13, 493.88, 0.36),
+            Note(0.27, 587.33, 0.33),
+            Note(0.42, 783.99, 0.23),
+        )
+        val signal = signal(duration) { time ->
+            notes.sumOf { note -> noteSample(time, duration, note) }
+        }
+        addEcho(signal, 95, 0.14)
+        addEcho(signal, 170, 0.08)
+        return pcm(signal, 0.52)
+    }
+
+    private fun createNearMiss(): ShortArray {
+        val duration = 0.72
+        val notes = listOf(
+            Note(0.00, 392.00, 0.38),
+            Note(0.18, 466.16, 0.31),
+        )
+        val signal = signal(duration) { time ->
+            notes.sumOf { note -> noteSample(time, duration, note) }
+        }
+        addEcho(signal, 88, 0.12)
+        return pcm(signal, 0.48)
+    }
+
+    private fun createFailure(): ShortArray {
+        val duration = 0.68
+        val signal = signal(duration) { time ->
+            val envelope = smoothAttack(time, 0.025) * exp(-3.2 * time / duration)
+            val body = 0.72 * chirp(time, duration, 310.0, 205.0) +
+                0.18 * chirp(time, duration, 155.0, 115.0, 0.7)
+            body * envelope
+        }
+        addEcho(signal, 90, 0.10)
+        return pcm(signal, 0.42)
+    }
+
+    private fun signal(durationSeconds: Double, sample: (Double) -> Double): DoubleArray {
+        val count = (SAMPLE_RATE * durationSeconds).toInt()
+        return DoubleArray(count) { index -> sample(index.toDouble() / SAMPLE_RATE) }
+    }
+
+    private fun noteSample(time: Double, totalDuration: Double, note: Note): Double {
+        if (time < note.start) return 0.0
+        val localTime = time - note.start
+        val remaining = totalDuration - note.start
+        val envelope = smoothAttack(localTime, 0.025) * exp(-3.0 * localTime / remaining)
+        return note.amplitude * envelope * (
+            sin(2.0 * PI * note.frequency * localTime) +
+                0.13 * sin(2.0 * PI * note.frequency * 2.0 * localTime + 0.4)
+            )
+    }
+
+    private fun chirp(
+        time: Double,
+        duration: Double,
+        startFrequency: Double,
+        endFrequency: Double,
+        phaseOffset: Double = 0.0,
+    ): Double {
+        val slope = ln(endFrequency / startFrequency) / duration
+        val phase = 2.0 * PI * startFrequency * (exp(slope * time) - 1.0) / slope + phaseOffset
+        return sin(phase)
+    }
+
+    private fun smoothAttack(time: Double, duration: Double): Double {
+        val value = (time / duration).coerceIn(0.0, 1.0)
+        return value * value * (3.0 - 2.0 * value)
+    }
+
+    private fun addEcho(signal: DoubleArray, delayMillis: Int, gain: Double) {
+        val delaySamples = SAMPLE_RATE * delayMillis / 1000
+        for (index in delaySamples until signal.size) {
+            signal[index] += signal[index - delaySamples] * gain
+        }
+    }
+
+    private fun pcm(signal: DoubleArray, peak: Double): ShortArray {
+        val maximum = signal.maxOfOrNull { abs(it) }?.takeIf { it > 0.0 } ?: 1.0
+        val scale = peak * Short.MAX_VALUE / maximum
+        return ShortArray(signal.size) { index ->
+            (signal[index] * scale)
+                .coerceIn(Short.MIN_VALUE.toDouble(), Short.MAX_VALUE.toDouble())
+                .toInt()
+                .toShort()
+        }
+    }
+
+    private fun writeWave(file: File, samples: ShortArray) {
+        val dataSize = samples.size * 2
+        val buffer = ByteBuffer.allocate(44 + dataSize).order(ByteOrder.LITTLE_ENDIAN)
+        buffer.put("RIFF".toByteArray(StandardCharsets.US_ASCII))
+        buffer.putInt(36 + dataSize)
+        buffer.put("WAVE".toByteArray(StandardCharsets.US_ASCII))
+        buffer.put("fmt ".toByteArray(StandardCharsets.US_ASCII))
+        buffer.putInt(16)
+        buffer.putShort(1.toShort())
+        buffer.putShort(1.toShort())
+        buffer.putInt(SAMPLE_RATE)
+        buffer.putInt(SAMPLE_RATE * 2)
+        buffer.putShort(2.toShort())
+        buffer.putShort(16.toShort())
+        buffer.put("data".toByteArray(StandardCharsets.US_ASCII))
+        buffer.putInt(dataSize)
+        samples.forEach(buffer::putShort)
+        file.writeBytes(buffer.array())
+    }
+
+    private data class Note(
+        val start: Double,
+        val frequency: Double,
+        val amplitude: Double,
+    )
+
+    private companion object {
+        const val SAMPLE_RATE = 48_000
+    }
+}
