@@ -22,7 +22,7 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **0.1.0** (`versionCode 1`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **0.3.0** (`versionCode 3`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
@@ -44,7 +44,11 @@ The prototype currently starts with **20 moving particles** and requires **12 ac
 - Chain depth tracking and triggered-particle counter
 - Instant retry with a new deterministic seed
 - Frame-rate-independent fixed-step simulation
-- Near-black playfield with electric cyan particles and violet/magenta chain reactions
+- Layered neon waves, trails, activation flashes, pulse bursts, and depth-reactive visual feedback
+- Sound and haptic feedback for taps, chain activations, success, and failure
+- In-session controls for sound, haptics, and reduced effects
+- Near-miss messaging and a stronger result/retry panel
+- Cinematic launch from pure black with the IMPULSE artwork fading in over three seconds
 - Russian and English interface resources
 - Portrait-first Android experience
 - No account, backend, analytics, ads, or network permission
@@ -55,16 +59,17 @@ The current build is deliberately focused on one question: **is the chain reacti
 
 IMPULSE is designed around clarity and escalation rather than visual noise:
 
+- **launch** — the app opens from pure black and reveals the IMPULSE artwork over three seconds;
 - **idle** — cool cyan particles move quietly across the field;
 - **tap** — one cyan impulse expands from the chosen point;
 - **chain** — triggered particles switch to violet/magenta and emit new waves;
-- **result** — the field resolves quickly so another attempt is never far away.
+- **result** — success, failure, and near misses resolve quickly so another attempt is never far away.
 
 The simulation is deterministic and seedable so the same level state can be reproduced across devices and tests, while rendering remains free to run at the display refresh rate.
 
 ## 📦 Availability
 
-The first public prototype, **IMPULSE 0.1.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.1.0) with signed APK and AAB artifacts plus SHA-256 checksums.
+The latest public prototype, **IMPULSE 0.3.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.3.0) with signed APK and AAB artifacts plus SHA-256 checksums.
 
 The repository is publicly visible for project transparency and review. **Public visibility does not grant permission to copy, build, modify, execute, redistribute, or otherwise use the source code or assets.** See [LICENSE](LICENSE).
 
@@ -165,11 +170,10 @@ The interface follows the device language through Android resources.
 
 ## 🗺 Roadmap
 
-- **Prototype:** prove the one-tap chain reaction and game feel
-- **Next:** visual/audio/haptic polish and stronger instant-retry feedback
-- **Then:** level definitions, progression, scoring, and persistence
+- **Current:** one-tap prototype, deterministic simulation, visual/audio/haptic game feel, result UX, and cinematic launch
+- **Next:** data-driven level definitions, progression, scoring, and local persistence
 - **Content:** roughly 60 handcrafted/generated levels for the first complete release
-- **Later:** endless mode and daily challenge only after the core game is proven
+- **Later:** tutorial, accessibility pass, local statistics, endless mode, and daily challenge after the core level loop is proven
 
 The product direction is tracked in [PROJECT.md](PROJECT.md).
 
