@@ -38,7 +38,7 @@ Windows:
 
 ## Релизы
 
-Официальный релиз запускается тегом `vMAJOR.MINOR.PATCH`. Для IMPULSE используется отдельный ключ подписи, который хранится в GitHub Environment secrets. Workflow проверяет подпись APK/AAB и SHA-256 сертификата, создаёт checksums и artifact attestations, после чего публикует GitHub Release.
+Официальный релиз запускается тегом `vMAJOR.MINOR.PATCH`. Для CI используется предоставленный владельцем ключ подписи, переданный только через GitHub Environment secrets. Workflow проверяет подпись APK/AAB и SHA-256 сертификата, создаёт checksums и artifact attestations, после чего публикует GitHub Release.
 
 Подробности: [docs/RELEASE.md](docs/RELEASE.md).
 
