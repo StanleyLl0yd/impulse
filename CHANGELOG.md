@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 - Cinematic launch splash using the IMPULSE chain-reaction artwork, fading from pure black to full visibility over three seconds before gameplay starts.
 - Black Android 12+ native splash handoff so the app opens without flashing the launcher icon before the cinematic artwork appears.
+- Verified automatic semver tagging and release dispatch after successful main-branch Android CI, security, and CodeQL checks.
 
 ### Changed
 

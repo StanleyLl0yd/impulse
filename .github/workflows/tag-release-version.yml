@@ -1,0 +1,122 @@
+name: Tag release version
+
+on:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: tag-release-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Create verified release tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Read release version
+        id: version
+        run: |
+          set -euo pipefail
+          version_name="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          version_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -1)"
+          tag="v$version_name"
+
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$version_code" =~ ^[0-9]+$ ]]
+          test -f ".github/release-notes/$tag.md"
+          grep -Fq "## $version_name -" CHANGELOG.md
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Check existing tag
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh api "/repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Wait for main verification
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          required_workflows=("Android CI" "Security and Quality" "CodeQL")
+
+          for attempt in $(seq 1 40); do
+            runs="$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              "/repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100")"
+            pending=0
+
+            for workflow in "${required_workflows[@]}"; do
+              record="$(jq -c --arg name "$workflow" \
+                '[.workflow_runs[] | select(.name == $name and .event == "push" and .head_branch == "main")] | sort_by(.created_at) | last // empty' \
+                <<< "$runs")"
+
+              if [[ -z "$record" ]]; then
+                pending=1
+                continue
+              fi
+
+              status="$(jq -r '.status' <<< "$record")"
+              conclusion="$(jq -r '.conclusion // ""' <<< "$record")"
+
+              if [[ "$status" != "completed" ]]; then
+                pending=1
+              elif [[ "$conclusion" != "success" ]]; then
+                echo "$workflow failed with conclusion '$conclusion'." >&2
+                exit 1
+              fi
+            done
+
+            if (( pending == 0 )); then
+              exit 0
+            fi
+
+            if (( attempt < 40 )); then
+              sleep 15
+            fi
+          done
+
+          echo "Timed out waiting for required main verification workflows." >&2
+          exit 1
+
+      - name: Create tag and start release
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh api --method POST \
+            "/repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$RELEASE_TAG" \
+            -f sha="$GITHUB_SHA"
+
+          jq -n --arg tag "$RELEASE_TAG" \
+            '{ref:"main",inputs:{release_tag:$tag}}' | \
+            gh api --method POST \
+              "/repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/dispatches" \
+              --input -
