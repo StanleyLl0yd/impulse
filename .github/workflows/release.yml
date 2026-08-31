@@ -24,8 +24,9 @@ jobs:
   validate:
     name: Validate release request
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
+      actions: read
       contents: read
 
     steps:
@@ -44,14 +45,91 @@ jobs:
       - name: Validate tag source and app version
         run: |
           set -euo pipefail
+          git fetch --force --tags origin
           git fetch --no-tags origin main
           git merge-base --is-ancestor HEAD origin/main
+
           version_name="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
           version_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -1)"
           test -n "$version_name"
-          test -n "$version_code"
+          [[ "$version_code" =~ ^[0-9]+$ ]]
+          (( version_code > 0 ))
           test "$RELEASE_TAG" = "v$version_name"
+
+          max_previous_code=0
+          max_previous_tag=""
+          while IFS= read -r tag; do
+            [[ "$tag" == "$RELEASE_TAG" ]] && continue
+            [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+            previous_file="$(git show "${tag}:app/build.gradle.kts" 2>/dev/null || true)"
+            [[ -n "$previous_file" ]] || continue
+            previous_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' <<< "$previous_file" | head -1)"
+            [[ "$previous_code" =~ ^[0-9]+$ ]] || continue
+            if (( previous_code > max_previous_code )); then
+              max_previous_code="$previous_code"
+              max_previous_tag="$tag"
+            fi
+          done < <(git tag --list 'v*')
+
+          if (( version_code <= max_previous_code )); then
+            echo "versionCode $version_code must be greater than $max_previous_code from $max_previous_tag." >&2
+            exit 1
+          fi
+
           echo "Validated $RELEASE_TAG with versionCode $version_code"
+
+      - name: Require successful main verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release_sha="$(git rev-parse HEAD)"
+          required_workflows=("Android CI" "Security and Quality" "CodeQL")
+
+          for attempt in $(seq 1 40); do
+            runs="$(gh api \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2026-03-10" \
+              "/repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$release_sha&per_page=100")"
+            pending=0
+
+            for workflow in "${required_workflows[@]}"; do
+              record="$(jq -c --arg name "$workflow" \
+                '[.workflow_runs[] | select(.name == $name and .event == "push" and .head_branch == "main")] | sort_by(.created_at) | last // empty' \
+                <<< "$runs")"
+
+              if [[ -z "$record" ]]; then
+                echo "$workflow: waiting for a main push run"
+                pending=1
+                continue
+              fi
+
+              status="$(jq -r '.status' <<< "$record")"
+              conclusion="$(jq -r '.conclusion // ""' <<< "$record")"
+              run_url="$(jq -r '.html_url' <<< "$record")"
+
+              if [[ "$status" != "completed" ]]; then
+                echo "$workflow: $status ($run_url)"
+                pending=1
+              elif [[ "$conclusion" != "success" ]]; then
+                echo "$workflow failed with conclusion '$conclusion': $run_url" >&2
+                exit 1
+              else
+                echo "$workflow: success ($run_url)"
+              fi
+            done
+
+            if (( pending == 0 )); then
+              exit 0
+            fi
+
+            if (( attempt < 40 )); then
+              sleep 15
+            fi
+          done
+
+          echo "Timed out waiting for required main verification workflows." >&2
+          exit 1
 
   build-sign:
     name: Test, build, sign, and attest
