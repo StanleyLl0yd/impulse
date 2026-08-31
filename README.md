@@ -64,11 +64,11 @@ The simulation is deterministic and seedable so the same level state can be repr
 
 ## 📦 Availability
 
-There is no public binary release yet. Official signed APK and AAB files, when released, will be published through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases).
+The first public prototype, **IMPULSE 0.1.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.1.0) with signed APK and AAB artifacts plus SHA-256 checksums.
 
 The repository is publicly visible for project transparency and review. **Public visibility does not grant permission to copy, build, modify, execute, redistribute, or otherwise use the source code or assets.** See [LICENSE](LICENSE).
 
-Android 8.0 or newer is required for future public builds.
+Android 8.0 or newer is required for the public build.
 
 ## 🛠️ Development
 
@@ -78,7 +78,7 @@ Requirements:
 
 - JDK 17
 - Android SDK 37
-- Gradle 9.5.0 through the repository Gradle Wrapper
+- Gradle 9.7.1 through the repository Gradle Wrapper
 
 Build the debug application from an authorized working copy:
 
@@ -106,7 +106,7 @@ Windows:
 | UI | Jetpack Compose + Material 3 |
 | Rendering | Compose Canvas |
 | Simulation | Custom deterministic fixed-step 2D engine |
-| Build | Gradle 9.5.0, AGP 9.3.2, Kotlin DSL |
+| Build | Gradle 9.7.1, AGP 9.3.2, Kotlin DSL |
 | Android | minSdk 26, targetSdk 37, compileSdk 37 |
 
 Gameplay state and simulation are kept separate from rendering so visual polish can evolve without turning the renderer into the game engine.
@@ -136,7 +136,7 @@ Official releases are tag-driven with `vMAJOR.MINOR.PATCH` tags that must match 
 
 The Android Release workflow:
 
-1. validates the tag and source version;
+1. validates the tag, source version, `versionCode`, and successful required checks for the tagged `main` commit;
 2. runs tests and Android Lint;
 3. restores the owner-provided signing key only inside the protected `release` environment;
 4. builds signed APK and AAB artifacts;
