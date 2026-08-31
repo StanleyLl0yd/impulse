@@ -1,0 +1,1 @@
+Prepared binary blobs are mapped for identification before final tree assembly.
