@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - .github/workflows/bootstrap-wrapper.yml
       - gradle/wrapper/gradle-wrapper.properties
       - build.gradle.kts
       - settings.gradle.kts
