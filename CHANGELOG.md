@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Release signing now documents the owner-supplied key model used by the repository.
+- Release validation now requires successful main-branch Android CI, Security and Quality, and CodeQL runs for the tagged commit and a monotonically increasing `versionCode`.
+- Gradle wrapper and pinned GitHub Actions dependencies were updated through Dependabot.
 - Semgrep CI now pins the container image by immutable digest.
 - Gameplay spawning now uses a deterministic checked fallback instead of overlapping at the field center.
 - Collision source selection now resolves same-tick contacts by earliest impact time with deterministic chain-depth tie-breaking.
