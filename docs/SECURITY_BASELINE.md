@@ -2,7 +2,7 @@
 
 The repository baseline combines the strongest practices already used across the maintainer's Android projects and tightens them for a new application.
 
-- Dedicated IMPULSE signing key.
+- Owner-provided release signing key; no keystore or local setup script is stored in the repository.
 - GitHub Environment secrets for release material.
 - Tag-driven release intent.
 - APK and AAB signature/fingerprint verification.
@@ -14,6 +14,6 @@ The repository baseline combines the strongest practices already used across the
 - Android unit, lint, build and emulator tests.
 - CodeQL, Semgrep, Gitleaks and Qodana.
 - Dependabot for Gradle and GitHub Actions.
-- GitHub dependency/security features enabled by bootstrap script.
+- GitHub dependency and security features are part of the repository baseline.
 - No baseline internet permission, dangerous runtime permissions, analytics or advertising SDKs.
 - `android:usesCleartextTraffic="false"` and no unnecessary exported components.
