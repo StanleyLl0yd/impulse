@@ -1,26 +1,18 @@
 # Release process
 
-## One-time setup
+## One-time signing setup
 
-After the bootstrap PR is merged, GitHub Actions automatically opens a small follow-up PR containing the generated Gradle Wrapper binary. Merge that PR, then run the repository hardening script and signing setup script from a trusted local machine with GitHub CLI authenticated as the repository owner.
+The repository does not generate, store, or publish local setup scripts or release keystores. Release signing uses a keystore supplied by the repository owner.
 
-macOS/Linux:
+Configure the `release` GitHub Environment from a trusted local machine with authenticated GitHub CLI. The local setup command should upload these environment secrets:
 
-```bash
-./tools/bootstrap-github.sh
-./tools/setup-release-signing.sh
-```
+- `ANDROID_KEYSTORE_BASE64`
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+- `ANDROID_CERT_SHA256`
 
-Windows PowerShell:
-
-```powershell
-.\tools\bootstrap-github.ps1
-.\tools\setup-release-signing.ps1
-```
-
-The signing script creates a dedicated IMPULSE keystore locally, prints its location and certificate fingerprint, creates the `release` GitHub Environment, and writes the signing material to environment secrets through `gh secret set`.
-
-Back up the generated keystore and password outside the repository. Losing the release key can prevent publishing compatible updates on stores that rely on that signing identity.
+The certificate SHA-256 value is used by CI to verify that both the APK and AAB were signed with the expected certificate. Keep the original keystore and its credentials backed up securely outside the repository.
 
 ## Publishing a GitHub release
 
@@ -37,7 +29,3 @@ git push origin v0.1.0
 ```
 
 The release workflow validates the tag and version, reruns tests/lint, builds and signs APK/AAB, verifies both signatures and the certificate SHA-256, creates checksums and attestations, then publishes a GitHub Release.
-
-## RuStore
-
-The first RuStore version should be published manually. After the application has an active RuStore version and its API application identity is known, add scoped RuStore publication credentials and enable the store-publishing workflow. Do not reuse signing or API keys from another application.
