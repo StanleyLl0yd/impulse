@@ -4,7 +4,7 @@
 
 ### ONE TAP · ONE IMPULSE · MAXIMUM CHAIN
 
-`○ · ○ · ◎ ))) ◉ ✦ ✦ ✦`
+<img src="docs/assets/readme/impulse-chain.webp" alt="IMPULSE chain reaction" width="100%">
 
 [![Android CI](https://img.shields.io/github/actions/workflow/status/StanleyLl0yd/impulse/ci.yml?branch=main&label=CI&labelColor=050814&color=00E5FF)](https://github.com/StanleyLl0yd/impulse/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/StanleyLl0yd/impulse?label=release&labelColor=050814&color=9E4DFF)](https://github.com/StanleyLl0yd/impulse/releases/latest)
@@ -197,8 +197,6 @@ Copyright © 2026 Stanley Lloyd.
 ---
 
 <div align="center">
-
-`○ wait · ◎ tap · ◉ expand · ✦ chain`
 
 **ONE TAP · ONE IMPULSE · MAXIMUM CHAIN**
 
