@@ -1,5 +1,8 @@
 package io.github.stanleyll0yd.impulse.ui
 
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.os.Build
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -17,9 +20,10 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import io.github.stanleyll0yd.impulse.R
 
 private const val SPLASH_FADE_DURATION_MILLIS = 3_000
@@ -38,6 +42,18 @@ fun ImpulseRoot() {
 @Composable
 private fun ImpulseSplash(onFinished: () -> Unit) {
     val imageAlpha = remember { Animatable(0f) }
+    val resources = LocalContext.current.resources
+    val splashBitmap = remember(resources) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ImageDecoder.decodeBitmap(
+                ImageDecoder.createSource(resources, R.drawable.impulse_splash),
+            ).asImageBitmap()
+        } else {
+            requireNotNull(
+                BitmapFactory.decodeResource(resources, R.drawable.impulse_splash),
+            ).asImageBitmap()
+        }
+    }
 
     LaunchedEffect(Unit) {
         imageAlpha.animateTo(
@@ -58,7 +74,7 @@ private fun ImpulseSplash(onFinished: () -> Unit) {
             .testTag("splash-screen"),
     ) {
         Image(
-            painter = painterResource(R.drawable.impulse_splash),
+            bitmap = splashBitmap,
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
