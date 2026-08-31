@@ -24,9 +24,9 @@ jobs:
       - name: Restore splash asset
         run: |
           set -euo pipefail
-          cat .tmp/splash-q100.b64.part-* | base64 --decode > app/src/main/res/drawable-nodpi/impulse_splash.webp
-          test "$(stat -c%s app/src/main/res/drawable-nodpi/impulse_splash.webp)" = "333140"
-          echo "5dd408690e083dc0220414f900705b5cd5b4f002ce46f4dc6d4538c327eca6f7  app/src/main/res/drawable-nodpi/impulse_splash.webp" | sha256sum --check
+          cat .tmp/splash.b64.part-* | base64 --decode > app/src/main/res/drawable-nodpi/impulse_splash.webp
+          test "$(stat -c%s app/src/main/res/drawable-nodpi/impulse_splash.webp)" = "152754"
+          echo "6ce4da51a0eb7a6b5545c1170541799d38728ea352aedd281bacec71b117fc8d  app/src/main/res/drawable-nodpi/impulse_splash.webp" | sha256sum --check
           file app/src/main/res/drawable-nodpi/impulse_splash.webp
           rm -rf .tmp
 
