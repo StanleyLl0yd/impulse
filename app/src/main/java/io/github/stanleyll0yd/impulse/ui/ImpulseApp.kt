@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import io.github.stanleyll0yd.impulse.R
 import io.github.stanleyll0yd.impulse.game.GameEngine
 import io.github.stanleyll0yd.impulse.game.GameSnapshot
+import io.github.stanleyll0yd.impulse.game.ParticleSnapshot
 import io.github.stanleyll0yd.impulse.game.Vec2
 import kotlinx.coroutines.isActive
 
@@ -91,16 +93,16 @@ private fun GameScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .testTag("game-canvas")
-                .pointerInput(snapshot.impulseUsed, snapshot.finished) {
+                .pointerInput(snapshot.field, snapshot.impulseUsed, snapshot.finished) {
                     detectTapGestures { offset ->
-                        if (!snapshot.impulseUsed && !snapshot.finished && size.width > 0 && size.height > 0) {
-                            onTap(
-                                Vec2(
-                                    x = offset.x.toDouble() / size.width.toDouble(),
-                                    y = offset.y.toDouble() / size.height.toDouble(),
-                                ),
-                            )
-                        }
+                        if (snapshot.impulseUsed || snapshot.finished) return@detectTapGestures
+                        val viewport = calculateGameViewport(
+                            canvasWidth = size.width.toFloat(),
+                            canvasHeight = size.height.toFloat(),
+                            field = snapshot.field,
+                        )
+                        val position = viewport.toGame(offset.x, offset.y, snapshot.field)
+                        if (position != null) onTap(position)
                     }
                 },
         ) {
@@ -114,7 +116,8 @@ private fun GameScreen(
             fontWeight = FontWeight.Medium,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 16.dp),
+                .padding(top = 16.dp)
+                .testTag("score"),
         )
 
         if (!snapshot.impulseUsed) {
@@ -124,7 +127,8 @@ private fun GameScreen(
                 fontSize = 14.sp,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp),
+                    .padding(bottom = 24.dp)
+                    .testTag("game-hint"),
             )
         }
 
@@ -132,11 +136,13 @@ private fun GameScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .testTag("result"),
             ) {
                 Text(
                     text = if (snapshot.success) {
-                        "CHAIN ${snapshot.triggeredCount}"
+                        stringResource(R.string.chain_result, snapshot.triggeredCount)
                     } else {
                         "${snapshot.triggeredCount} / ${snapshot.requiredCount}"
                     },
@@ -144,7 +150,10 @@ private fun GameScreen(
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
                 )
-                Button(onClick = onRetry) {
+                Button(
+                    onClick = onRetry,
+                    modifier = Modifier.testTag("retry"),
+                ) {
                     Text(stringResource(R.string.retry))
                 }
             }
@@ -153,39 +162,61 @@ private fun GameScreen(
 }
 
 private fun DrawScope.drawGame(snapshot: GameSnapshot) {
-    val minDimension = size.minDimension
+    val viewport = calculateGameViewport(size.width, size.height, snapshot.field)
+    if (viewport.scale <= 0f) return
 
-    snapshot.waves.forEach { wave ->
-        val radius = (wave.radius * minDimension).toFloat()
-        val progress = (wave.radius / wave.maximumRadius).coerceIn(0.0, 1.0).toFloat()
-        val alpha = (1f - progress) * 0.8f
-        val center = Offset(
-            (wave.origin.x * size.width).toFloat(),
-            (wave.origin.y * size.height).toFloat(),
-        )
-        drawCircle(
-            color = if (wave.chainDepth == 0) {
-                ParticleGlow.copy(alpha = alpha)
-            } else {
-                TriggeredGlow.copy(alpha = alpha)
-            },
-            radius = radius,
-            center = center,
-            style = Stroke(width = 2.5f + (1f - progress) * 3f),
-        )
-    }
+    clipRect(
+        left = viewport.left,
+        top = viewport.top,
+        right = viewport.left + viewport.width,
+        bottom = viewport.top + viewport.height,
+    ) {
+        snapshot.waves.forEach { wave ->
+            val radius = interpolate(
+                wave.previousRadius,
+                wave.radius,
+                snapshot.interpolationAlpha,
+            ).toFloat() * viewport.scale
+            val progress = (radius / (wave.maximumRadius.toFloat() * viewport.scale))
+                .coerceIn(0f, 1f)
+            val alpha = (1f - progress) * 0.8f
+            val center = Offset(
+                viewport.left + wave.origin.x.toFloat() * viewport.scale,
+                viewport.top + wave.origin.y.toFloat() * viewport.scale,
+            )
+            drawCircle(
+                color = if (wave.chainDepth == 0) {
+                    ParticleGlow.copy(alpha = alpha)
+                } else {
+                    TriggeredGlow.copy(alpha = alpha)
+                },
+                radius = radius,
+                center = center,
+                style = Stroke(width = 2.5f + (1f - progress) * 3f),
+            )
+        }
 
-    snapshot.particles.forEach { particle ->
-        val center = Offset(
-            (particle.position.x * size.width).toFloat(),
-            (particle.position.y * size.height).toFloat(),
-        )
-        val radius = (particle.radius * minDimension).toFloat()
-        val glow = if (particle.triggered) TriggeredGlow else ParticleGlow
-        val core = if (particle.triggered) TriggeredCore else ParticleCore
+        snapshot.particles.forEach { particle ->
+            val position = interpolatePosition(particle, snapshot.interpolationAlpha)
+            val center = Offset(
+                viewport.left + position.x.toFloat() * viewport.scale,
+                viewport.top + position.y.toFloat() * viewport.scale,
+            )
+            val radius = particle.radius.toFloat() * viewport.scale
+            val glow = if (particle.triggered) TriggeredGlow else ParticleGlow
+            val core = if (particle.triggered) TriggeredCore else ParticleCore
 
-        drawCircle(glow.copy(alpha = 0.12f), radius * 3.0f, center)
-        drawCircle(glow.copy(alpha = 0.28f), radius * 1.8f, center)
-        drawCircle(core, radius, center)
+            drawCircle(glow.copy(alpha = 0.12f), radius * 3.0f, center)
+            drawCircle(glow.copy(alpha = 0.28f), radius * 1.8f, center)
+            drawCircle(core, radius, center)
+        }
     }
 }
+
+private fun interpolatePosition(particle: ParticleSnapshot, alpha: Double): Vec2 = Vec2(
+    x = interpolate(particle.previousPosition.x, particle.position.x, alpha),
+    y = interpolate(particle.previousPosition.y, particle.position.y, alpha),
+)
+
+private fun interpolate(start: Double, end: Double, alpha: Double): Double =
+    start + (end - start) * alpha

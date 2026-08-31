@@ -6,6 +6,8 @@
 - Keep the project native Android with Kotlin and Jetpack Compose unless explicitly approved otherwise.
 - Keep gameplay logic independent from rendering and Android UI where practical.
 - Preserve deterministic, seedable simulation behavior.
+- Keep gameplay coordinates independent of device aspect ratio through the canonical logical playfield.
+- Keep the fixed 60 Hz simulation independent from display refresh rate and use interpolation for higher-refresh rendering.
 - Prefer the smallest correct implementation and avoid speculative abstractions.
 - Do not introduce a dependency without a concrete need.
 - Do not add analytics, ads, accounts, backend services, or network access unless explicitly requested.
