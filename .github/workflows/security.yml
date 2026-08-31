@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Semgrep CE
-        run: semgrep scan --config auto --error --metrics=off .
+        run: semgrep scan --config p/security-audit --config p/secrets --error --metrics=off .
 
   gitleaks:
     name: Gitleaks
