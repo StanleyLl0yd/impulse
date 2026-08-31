@@ -1,0 +1,157 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Android build environment
+        uses: ./.github/actions/android-gradle-setup
+        with:
+          gradle-cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      - name: Install Android 37 platform
+        run: sdkmanager "platforms;android-37.0" "build-tools;37.0.0"
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Build debug and release artifacts
+        run: ./gradlew assembleDebug compileDebugAndroidTestKotlin assembleRelease bundleRelease --stacktrace
+
+      - name: Run Android lint
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: impulse-debug-apk-${{ github.sha }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload lint and test reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: impulse-verification-reports-${{ github.sha }}
+          path: |
+            app/build/reports/lint-results-debug.*
+            app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  android-tests:
+    name: Android runtime tests (API ${{ matrix.api-level }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(github.event_name == 'schedule' && '[{"api-level":"26","system-image":"system-images;android-26;google_apis;x86_64"},{"api-level":"37","system-image":"system-images;android-37.0;google_apis_ps16k;x86_64"}]' || '[{"api-level":"37","system-image":"system-images;android-37.0;google_apis_ps16k;x86_64"}]') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Android test environment
+        uses: ./.github/actions/android-gradle-setup
+        with:
+          android-packages: platform-tools emulator
+          gradle-cache-read-only: true
+
+      - name: Install Android SDK and system image
+        run: |
+          sdkmanager \
+            "platforms;android-37.0" \
+            "build-tools;37.0.0" \
+            "${{ matrix.system-image }}"
+
+      - name: Configure AVD home
+        run: |
+          mkdir -p "$RUNNER_TEMP/avd"
+          echo "ANDROID_AVD_HOME=$RUNNER_TEMP/avd" >> "$GITHUB_ENV"
+
+      - name: Create emulator
+        run: |
+          echo "no" | avdmanager create avd \
+            --force \
+            --name impulse-ci \
+            --package "${{ matrix.system-image }}" \
+            --device pixel
+
+      - name: Start emulator
+        run: |
+          sudo chmod 666 /dev/kvm || true
+          nohup "$ANDROID_HOME/emulator/emulator" \
+            -avd impulse-ci \
+            -no-window \
+            -no-audio \
+            -no-boot-anim \
+            -no-snapshot \
+            -gpu software \
+            > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          timeout 120 adb wait-for-device
+          timeout 240 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == "1" ]]; do sleep 2; done'
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+
+      - name: Run Android tests
+        run: ./gradlew connectedDebugAndroidTest --stacktrace
+
+      - name: Upload Android test reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: android-test-reports-api-${{ matrix.api-level }}
+          path: |
+            app/build/reports/androidTests/connected/
+            app/build/outputs/androidTest-results/connected/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Show emulator log on failure
+        if: failure()
+        run: cat "$RUNNER_TEMP/emulator.log" || true
+
+  verify:
+    name: Verify
+    if: always()
+    needs: [build, android-tests]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Enforce verification results
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          ANDROID_TEST_RESULT: ${{ needs.android-tests.result }}
+        run: |
+          test "$BUILD_RESULT" = "success"
+          test "$ANDROID_TEST_RESULT" = "success"
