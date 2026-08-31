@@ -25,6 +25,7 @@ class ImpulseLaunchTest {
         composeRule.mainClock.autoAdvance = false
 
         composeRule.onNodeWithTag("settings-button").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithTag("settings-panel").assertExists()
         composeRule.onNodeWithTag("sound-toggle").assertExists()
         composeRule.onNodeWithTag("haptics-toggle").assertExists()
