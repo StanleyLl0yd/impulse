@@ -1,6 +1,6 @@
 package io.github.stanleyll0yd.impulse
 
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import org.junit.Rule
 import org.junit.Test
@@ -11,6 +11,7 @@ class ImpulseLaunchTest {
 
     @Test
     fun gameCanvasIsDisplayed() {
+        composeRule.mainClock.autoAdvance = false
         composeRule.onNodeWithTag("game-canvas").assertExists()
     }
 }
