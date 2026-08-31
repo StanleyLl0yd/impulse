@@ -23,13 +23,17 @@ The central rule is: **one tap, one impulse, one chain reaction**.
 - Kotlin and Jetpack Compose.
 - Custom lightweight 2D rendering/simulation; no game engine unless profiling or requirements justify it.
 - `minSdk 26`, `targetSdk 37`, `compileSdk 37`.
-- Frame-rate-independent deterministic simulation with seedable randomness.
+- Deterministic fixed-step simulation at 60 Hz with seedable randomness.
+- Interpolated rendering may run at the display refresh rate without changing simulation outcomes.
+- A canonical 9:16 logical playfield keeps gameplay geometry independent from device aspect ratio.
 
 ## Gameplay entities
 
 A particle has position, velocity, radius, trigger state and chain depth. A wave has origin, radius, maximum radius, growth rate and chain depth. A particle can trigger only once per attempt.
 
 Level completion is based on `triggeredParticles >= requiredTriggeredCount` after all waves expire.
+
+If multiple wave fronts reach a particle during the same fixed simulation step, the collision is attributed to the earliest impact within that step. Equal-time contacts prefer the deeper chain and otherwise preserve deterministic wave order.
 
 ## MVP
 
@@ -43,11 +47,14 @@ Target roughly 60 levels, polished visuals/audio, gradually introduced special p
 
 Gameplay logic belongs under `game/` and must not depend on Compose drawing decisions. Rendering reads game snapshots. Levels should become data-driven and deterministic. Persistence should remain local; add DataStore when progression/settings are implemented.
 
+The simulation uses canonical logical coordinates. UI code maps that field to the available canvas with a uniform scale and letterboxing when necessary; taps outside the logical playfield do not affect gameplay.
+
 ## Quality requirements
 
-- 60 FPS target on representative mid-range hardware; support higher refresh displays without changing simulation outcomes.
+- Fixed 60 Hz simulation with smooth interpolated rendering on 60/90/120/144 Hz displays.
+- Identical logical gameplay geometry and seeded outcomes across device aspect ratios.
 - Avoid per-frame allocation pressure where practical.
-- Unit-test deterministic gameplay rules.
+- Unit-test deterministic gameplay rules, field geometry and viewport mapping.
 - Run Android lint and release builds in CI.
 - Stress-test larger chain reactions before content expansion.
 - No unnecessary permissions, SDKs, dependencies, exported components or cleartext network traffic.

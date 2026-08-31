@@ -18,7 +18,7 @@ IMPULSE is designed to minimize attack surface:
 - no accounts or backend in the initial releases;
 - no advertising or analytics SDKs by default;
 - no dangerous Android runtime permissions in the baseline app;
-- dedicated release signing key for this application;
+- owner-controlled release signing key supplied outside the repository;
 - release signing material provided only through protected GitHub Environment secrets;
 - immutable action pinning, dependency updates, static analysis, and secret scanning in CI.
 
