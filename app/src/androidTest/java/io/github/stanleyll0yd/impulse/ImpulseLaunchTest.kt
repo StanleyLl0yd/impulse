@@ -17,6 +17,18 @@ class ImpulseLaunchTest {
         composeRule.mainClock.autoAdvance = false
         composeRule.onNodeWithTag("game-canvas").assertExists()
         composeRule.onNodeWithTag("game-hint").assertExists()
+        composeRule.onNodeWithTag("settings-button").assertExists()
+    }
+
+    @Test
+    fun gameFeelSettingsAreAvailable() {
+        composeRule.mainClock.autoAdvance = false
+
+        composeRule.onNodeWithTag("settings-button").performClick()
+        composeRule.onNodeWithTag("settings-panel").assertExists()
+        composeRule.onNodeWithTag("sound-toggle").assertExists()
+        composeRule.onNodeWithTag("haptics-toggle").assertExists()
+        composeRule.onNodeWithTag("reduced-effects-toggle").assertExists()
     }
 
     @Test

@@ -2,5 +2,17 @@
     <string name="app_name">IMPULSE</string>
     <string name="game_hint">Коснитесь один раз, чтобы запустить цепную реакцию</string>
     <string name="chain_result">ЦЕПОЧКА %1$d</string>
+    <string name="chain_depth">Глубина %1$d</string>
     <string name="retry">Ещё раз</string>
+    <string name="settings_short">FX</string>
+    <string name="settings_title">Ощущение игры</string>
+    <string name="settings_sound">Звук</string>
+    <string name="settings_haptics">Виброотклик</string>
+    <string name="settings_reduced_effects">Меньше эффектов</string>
+    <string name="result_success_title">ЦЕПЬ ЗАВЕРШЕНА</string>
+    <string name="result_success_detail">Импульс достиг глубины %1$d</string>
+    <string name="result_near_miss_title">СОВСЕМ РЯДОМ</string>
+    <string name="result_near_miss_detail">Не хватило всего %1$d</string>
+    <string name="result_failure_title">РЕАКЦИЯ ЗАВЕРШЕНА</string>
+    <string name="result_failure_detail">Нужно ещё частиц: %1$d</string>
 </resources>

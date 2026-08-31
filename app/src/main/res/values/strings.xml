@@ -2,5 +2,17 @@
     <string name="app_name">IMPULSE</string>
     <string name="game_hint">Tap once to start a chain reaction</string>
     <string name="chain_result">CHAIN %1$d</string>
-    <string name="retry">Retry</string>
+    <string name="chain_depth">Depth %1$d</string>
+    <string name="retry">Again</string>
+    <string name="settings_short">FX</string>
+    <string name="settings_title">Game feel</string>
+    <string name="settings_sound">Sound</string>
+    <string name="settings_haptics">Haptics</string>
+    <string name="settings_reduced_effects">Reduced effects</string>
+    <string name="result_success_title">CHAIN COMPLETE</string>
+    <string name="result_success_detail">The impulse reached depth %1$d</string>
+    <string name="result_near_miss_title">SO CLOSE</string>
+    <string name="result_near_miss_detail">Only %1$d more needed</string>
+    <string name="result_failure_title">REACTION ENDED</string>
+    <string name="result_failure_detail">Need %1$d more particles</string>
 </resources>

@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.2.0 - 2026-08-31
+
+### Added
+
+- Layered neon wave rendering, particle trails, activation flashes, pulse bursts, and depth-reactive visual feedback.
+- Sound feedback for the initial impulse, chain reactions, success, and failure without adding network or analytics dependencies.
+- Haptic feedback for taps, chain activations, and final results using platform haptic feedback.
+- In-session Game Feel controls for sound, haptics, and reduced effects.
+- Near-miss result messaging and a stronger result/retry panel.
+- A 200-particle chain-reaction stress scenario in unit tests.
+
+### Changed
+
+- Triggered particles now expose deterministic activation age for time-based visual effects without coupling rendering to gameplay decisions.
+- Result UX now highlights success, near misses, required particles, and maximum chain depth.
+- Visual effects can be reduced while preserving the core gameplay state and collision behavior.
+
 ## 0.1.0 - 2026-08-31
 
 ### Added
