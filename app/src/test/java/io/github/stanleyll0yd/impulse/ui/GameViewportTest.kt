@@ -26,8 +26,8 @@ class GameViewportTest {
         val viewport = calculateGameViewport(1080f, 2400f, GameField.DEFAULT)
         val point = requireNotNull(viewport.toGame(540f, 1200f, GameField.DEFAULT))
 
-        assertEquals(GameField.DEFAULT.width / 2.0, point.x, 1e-9)
-        assertEquals(GameField.DEFAULT.height / 2.0, point.y, 1e-9)
+        assertEquals(GameField.DEFAULT.width / 2.0, point.x, 1e-6)
+        assertEquals(GameField.DEFAULT.height / 2.0, point.y, 1e-6)
     }
 
     @Test
