@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Cinematic launch splash using the IMPULSE chain-reaction artwork, fading from pure black to full visibility over three seconds before gameplay starts.
+
 ## 0.2.0 - 2026-08-31
 
 ### Added
