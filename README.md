@@ -11,7 +11,7 @@
 [![Downloads](https://img.shields.io/github/downloads/StanleyLl0yd/impulse/total?label=downloads&labelColor=050814&color=00E5FF)](https://github.com/StanleyLl0yd/impulse/releases)
 [![Android 8+](https://img.shields.io/badge/Android-8.0%2B-00E5FF?labelColor=050814&logo=android&logoColor=8FF8FF)](https://github.com/StanleyLl0yd/impulse)
 [![Offline](https://img.shields.io/badge/network-offline-9E4DFF?labelColor=050814)](https://github.com/StanleyLl0yd/impulse)
-[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-9E4DFF?labelColor=050814)](LICENSE)
+[![License](https://img.shields.io/badge/license-Proprietary%20%2F%20All%20Rights%20Reserved-9E4DFF?labelColor=050814)](LICENSE)
 
 [![English](https://img.shields.io/badge/lang-EN-00E5FF?labelColor=050814)](README.md)
 [![Русский](https://img.shields.io/badge/lang-RU-9E4DFF?labelColor=050814)](README_RU.md)
@@ -62,15 +62,17 @@ IMPULSE is designed around clarity and escalation rather than visual noise:
 
 The simulation is deterministic and seedable so the same level state can be reproduced across devices and tests, while rendering remains free to run at the display refresh rate.
 
-## 📦 Installation
+## 📦 Availability
 
-There is no public binary release yet. Until the first tagged release is published, build the project from source.
+There is no public binary release yet. Official signed APK and AAB files, when released, will be published through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases).
 
-Official signed APK and AAB files will be published only through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases).
+The repository is publicly visible for project transparency and review. **Public visibility does not grant permission to copy, build, modify, execute, redistribute, or otherwise use the source code or assets.** See [LICENSE](LICENSE).
 
-Android 8.0 or newer is required.
+Android 8.0 or newer is required for future public builds.
 
-## 🛠️ Build from source
+## 🛠️ Development
+
+The following commands are for the copyright owner and explicitly authorized development only. They do not grant a license to anyone else.
 
 Requirements:
 
@@ -78,9 +80,9 @@ Requirements:
 - Android SDK 37
 - Gradle 9.5.0 through the repository Gradle Wrapper
 
+Build the debug application from an authorized working copy:
+
 ```bash
-git clone https://github.com/StanleyLl0yd/impulse.git
-cd impulse
 ./gradlew assembleDebug
 ```
 
@@ -176,19 +178,19 @@ The product direction is tracked in [PROJECT.md](PROJECT.md).
 - [CHANGELOG.md](CHANGELOG.md)
 - [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases)
 
-## 🤝 Contributing
+## 🤝 Feedback and contributions
 
-Bug reports and focused pull requests are welcome.
+Bug reports and suggestions are welcome.
 
-Keep changes small, preserve deterministic gameplay and the offline-first boundary, avoid unnecessary dependencies, and include tests for gameplay or regression changes where practical. Project-specific rules are documented in [AGENTS.md](AGENTS.md).
+Source-code, asset, documentation, or other project contributions are accepted only when explicitly agreed in advance by the copyright owner. Submission of material does not grant any license to IMPULSE and does not alter ownership of the project. Project-specific rules are documented in [AGENTS.md](AGENTS.md).
 
 ## 📄 License
 
-IMPULSE is licensed under the **PolyForm Noncommercial License 1.0.0**.
+**IMPULSE is proprietary software. Copyright © 2026 Stanley Lloyd. All rights reserved.**
 
-Noncommercial use, copying, modification, and distribution are permitted under the license terms. Commercial use requires a separate agreement. See [LICENSE](LICENSE) for the authoritative text.
+All original project code, assets, documentation, game design, and other original materials are owned by Stanley Lloyd. No permission is granted to copy, modify, build, execute, redistribute, publish, sublicense, sell, create derivative works from, or otherwise use any part of the project except where required by applicable law, GitHub's platform terms, or prior written permission from the copyright owner.
 
-Copyright © 2026 Stanley Lloyd.
+Third-party dependencies remain under their respective licenses. See [LICENSE](LICENSE) for the authoritative terms.
 
 ## 👨‍💻 Author
 
