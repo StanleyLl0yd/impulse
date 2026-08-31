@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   prepare:
+    if: github.actor != 'github-actions[bot]'
     name: Apply migration
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -22,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Apply migration
-        run: python3 tools/prepare_031.py
+        run: python3 tools/prepare_031_safe.py
 
       - name: Commit prepared release
         run: |
