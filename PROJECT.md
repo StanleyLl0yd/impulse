@@ -58,4 +58,4 @@ Gameplay logic belongs under `game/` and must not depend on Compose drawing deci
 
 ## Release policy
 
-Official releases are tag-driven and must match `versionName`. IMPULSE uses its own release certificate, never a signing key shared with another application. CI restores the key only into runner temporary storage, signs APK/AAB, verifies both artifacts and the expected certificate fingerprint, generates SHA-256 checksums and provenance attestations, publishes the GitHub Release, then removes temporary signing material.
+Official releases are tag-driven and must match `versionName`. The release signing key is supplied by the repository owner; the repository does not generate or contain it. CI restores the key only into runner temporary storage, signs APK/AAB, verifies both artifacts and the expected certificate fingerprint, generates SHA-256 checksums and provenance attestations, publishes the GitHub Release, then removes temporary signing material.
