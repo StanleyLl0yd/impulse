@@ -18,7 +18,6 @@ concurrency:
 jobs:
   create-wrapper-pr:
     name: Create wrapper PR when missing
-    if: ${{ hashFiles('gradle/wrapper/gradle-wrapper.jar') == '' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -31,13 +30,25 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Check wrapper
+        id: wrapper
+        shell: bash
+        run: |
+          if [[ -f gradle/wrapper/gradle-wrapper.jar ]]; then
+            echo "missing=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "missing=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up JDK 17
+        if: steps.wrapper.outputs.missing == 'true'
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Gradle 9.5.0
+        if: steps.wrapper.outputs.missing == 'true'
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           gradle-version: '9.5.0'
@@ -45,9 +56,11 @@ jobs:
           cache-read-only: true
 
       - name: Generate wrapper
+        if: steps.wrapper.outputs.missing == 'true'
         run: gradle wrapper --gradle-version 9.5.0 --distribution-type bin
 
       - name: Create branch and commit wrapper
+        if: steps.wrapper.outputs.missing == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
