@@ -1,7 +1,6 @@
 package com.sl.impulse
 
 import android.graphics.Bitmap
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
@@ -31,9 +30,7 @@ class RuStoreScreenshotTest {
         composeRule.mainClock.advanceTimeBy(300)
         capture("02-gameplay")
 
-        composeRule.onNodeWithTag("game-canvas").performTouchInput {
-            click(Offset(size.width * 0.27f, size.height * 0.40f))
-        }
+        composeRule.onNodeWithTag("game-canvas").performTouchInput { click() }
 
         composeRule.mainClock.advanceTimeBy(600)
         capture("03-reaction-0600")
