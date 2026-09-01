@@ -35,7 +35,7 @@ class RuStoreScreenshotTest {
         capture("02-gameplay")
 
         composeRule.onNodeWithTag("game-canvas").performTouchInput {
-            click(Offset(290f, 400f))
+            click(Offset(194f, 907f))
         }
 
         composeRule.mainClock.advanceTimeBy(600)
@@ -43,24 +43,20 @@ class RuStoreScreenshotTest {
         composeRule.mainClock.advanceTimeBy(500)
         capture("04-reaction-1100")
         composeRule.mainClock.advanceTimeBy(700)
-        capture("05-reaction-1800")
-        composeRule.mainClock.advanceTimeBy(800)
-        capture("06-reaction-2600")
-        composeRule.mainClock.advanceTimeBy(9_600)
 
         composeRule.onNodeWithTag("result").assertExists()
-        capture("07-result")
+        capture("05-result-success")
         Thread.sleep(250)
 
         composeRule.activityRule.scenario.onActivity {
             it.onBackPressedDispatcher.onBackPressed()
         }
         advanceUntilExists("menu-achievements")
-        capture("08-main-menu-progress")
+        capture("06-main-menu-progress")
 
         composeRule.onNodeWithTag("menu-achievements").performClick()
         advanceUntilExists("achievements-screen")
-        capture("09-achievements")
+        capture("07-achievements")
     }
 
     private fun useRussianLocale() {
