@@ -38,15 +38,17 @@ If multiple wave fronts reach a particle during the same fixed simulation step, 
 
 ## Campaign and progression
 
-The 0.4.0 campaign contains 20 ordered data-driven levels. Each level defines a stable seed, particle count, and required activation count. Retrying a level recreates the same deterministic simulation so improvement comes from timing and placement rather than rerolling the board.
+The 0.5.0 campaign contains 20 ordered data-driven levels. Each level defines a stable seed, particle count, and required activation count. Retrying a level recreates the same deterministic simulation so improvement comes from timing and placement rather than rerolling the board.
 
 A successful level unlocks the next level. Each attempt receives a numeric score based on activated particles, chain depth, completion, and activations beyond the minimum target. Successful attempts receive one to three stars: one for completion, two for reaching the level's bonus threshold, and three for activating every particle.
 
 Best per-level score, best star result, highest unlocked level, selected level, and Game Feel settings are stored locally through AndroidX DataStore Preferences. Progress is intentionally device-local; there is no account, cloud sync, or backend dependency.
 
+After the five-second branded launch splash, the app opens a dedicated main menu. Continue starts the highest unlocked level. New game starts level 1 without clearing campaign progress, scores, stars, or settings. Achievements shows the highest unlocked level and total earned stars. About and Exit complete the local menu flow, and Android back navigation returns from gameplay or menu subscreens to the main menu.
+
 ## MVP
 
-The first useful MVP contains 20 deterministic levels, standard particles, one impulse per attempt, chain reactions, local progression saving, scoring/stars, sound, haptics, basic settings, and Russian and English localization. Ads, purchases, leaderboards, accounts, cloud sync and complex content are explicitly outside the MVP.
+The first useful MVP contains 20 deterministic levels, standard particles, one impulse per attempt, chain reactions, a main menu with continue/new-game navigation, a local achievements summary, local progression saving, scoring/stars, sound, haptics, basic settings, and Russian and English localization. Ads, purchases, leaderboards, accounts, cloud sync and complex content are explicitly outside the MVP.
 
 ## Version 1.0 direction
 
@@ -66,7 +68,7 @@ The simulation uses canonical logical coordinates. UI code maps that field to th
 - Avoid per-frame allocation pressure where practical.
 - Unit-test deterministic gameplay rules, level catalog/scoring/progression rules, field geometry and viewport mapping.
 - Run Android lint and release builds in CI.
-- Runtime-test launch, level selection, settings, and tap-result-retry flows.
+- Runtime-test launch, main-menu navigation, level selection, achievements/About, settings, and tap-result-retry flows.
 - Stress-test larger chain reactions before content expansion.
 - No unnecessary permissions, SDKs, dependencies, exported components or cleartext network traffic.
 
