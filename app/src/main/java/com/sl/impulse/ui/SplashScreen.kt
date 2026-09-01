@@ -82,10 +82,7 @@ fun ImpulseRoot(onExit: () -> Unit = {}) {
 
             RootScreen.About -> AboutScreen(onBack = showMenu)
 
-            RootScreen.Game -> ImpulseGame(
-                repository = repository,
-                playerState = playerState,
-            )
+            RootScreen.Game -> ImpulseApp()
         }
     }
 }
