@@ -24,16 +24,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,13 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -65,7 +56,6 @@ import com.sl.impulse.game.GameEngine
 import com.sl.impulse.game.GameSnapshot
 import com.sl.impulse.game.LevelCatalog
 import com.sl.impulse.game.LevelDefinition
-import com.sl.impulse.game.ParticleSnapshot
 import com.sl.impulse.game.Vec2
 import com.sl.impulse.game.calculateLevelScore
 import com.sl.impulse.game.calculateLevelStars
@@ -74,164 +64,140 @@ import com.sl.impulse.progress.PlayerStateRepository
 import com.sl.impulse.progress.ProgressState
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
-
-private val Background = Color(0xFF050814)
-private val PanelBackground = Color(0xFF0B1022)
-private val ParticleCore = Color(0xFFB6FCFF)
-private val ParticleGlow = Color(0xFF00E5FF)
-private val TriggeredCore = Color(0xFFFFC4FF)
-private val TriggeredGlow = Color(0xFFB25CFF)
-private val NearMiss = Color(0xFFFFC857)
-private const val BURST_DURATION_SECONDS = 0.34f
 
 @Composable
-fun ImpulseApp() {
-    MaterialTheme(
-        colorScheme = darkColorScheme(
-            primary = ParticleGlow,
-            secondary = TriggeredGlow,
-            background = Background,
-            surface = PanelBackground,
-            onPrimary = Background,
-            onSurface = Color.White,
-        ),
-    ) {
-        val context = LocalContext.current
-        val repository = remember(context.applicationContext) {
-            PlayerStateRepository(context.applicationContext)
-        }
-        val playerState by repository.state.collectAsState(initial = PlayerState())
-        val scope = rememberCoroutineScope()
-        var selectedLevelNumber by rememberSaveable { mutableIntStateOf(1) }
-        var attemptId by remember { mutableIntStateOf(0) }
-        var showSettings by rememberSaveable { mutableStateOf(false) }
-        var showLevelPicker by rememberSaveable { mutableStateOf(false) }
+internal fun ImpulseGame(
+    repository: PlayerStateRepository,
+    playerState: PlayerState,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var selectedLevelNumber by rememberSaveable { mutableIntStateOf(1) }
+    var attemptId by remember { mutableIntStateOf(0) }
+    var showSettings by rememberSaveable { mutableStateOf(false) }
+    var showLevelPicker by rememberSaveable { mutableStateOf(false) }
 
-        LaunchedEffect(playerState.selectedLevel) {
-            selectedLevelNumber = playerState.selectedLevel.coerceIn(1, LevelCatalog.levels.size)
-        }
+    LaunchedEffect(playerState.selectedLevel) {
+        selectedLevelNumber = playerState.selectedLevel.coerceIn(1, LevelCatalog.levels.size)
+    }
 
-        val level = LevelCatalog.get(selectedLevelNumber)
-        val engine = remember(level.number, attemptId) {
-            GameEngine(
-                seed = level.seed,
-                particleCount = level.particleCount,
-                requiredCount = level.requiredCount,
-            )
-        }
-        var snapshot by remember(engine) { mutableStateOf(engine.snapshot()) }
-        var previousTriggeredCount by remember(engine) { mutableIntStateOf(0) }
-        val soundController = remember(context.applicationContext) {
-            GameSoundController(context.applicationContext)
-        }
-        val view = LocalView.current
-
-        DisposableEffect(soundController) {
-            onDispose { soundController.release() }
-        }
-
-        LaunchedEffect(engine) {
-            var previousFrame = 0L
-            while (isActive) {
-                withFrameNanos { frame ->
-                    if (previousFrame != 0L) {
-                        engine.advance((frame - previousFrame) / 1_000_000_000.0)
-                        snapshot = engine.snapshot()
-                    }
-                    previousFrame = frame
-                }
-            }
-        }
-
-        LaunchedEffect(snapshot.triggeredCount, engine) {
-            val delta = snapshot.triggeredCount - previousTriggeredCount
-            if (delta > 0) {
-                if (playerState.soundEnabled) {
-                    soundController.playChain(snapshot.maximumChainDepth, delta)
-                }
-                if (playerState.hapticsEnabled) {
-                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
-                }
-            }
-            previousTriggeredCount = snapshot.triggeredCount
-        }
-
-        LaunchedEffect(snapshot.finished, engine) {
-            if (snapshot.finished) {
-                val score = calculateLevelScore(
-                    level = level,
-                    triggeredCount = snapshot.triggeredCount,
-                    maximumChainDepth = snapshot.maximumChainDepth,
-                    success = snapshot.success,
-                )
-                val stars = calculateLevelStars(level, snapshot.triggeredCount, snapshot.success)
-                repository.recordResult(level.number, score, stars, snapshot.success)
-                if (playerState.soundEnabled) soundController.playResult(snapshot.success)
-                if (playerState.hapticsEnabled) view.performResultHaptic(snapshot.success)
-            }
-        }
-
-        val selectLevel: (Int) -> Unit = { number ->
-            selectedLevelNumber = number
-            attemptId = 0
-            showSettings = false
-            showLevelPicker = false
-            scope.launch { repository.selectLevel(number) }
-        }
-
-        GameScreen(
-            level = level,
-            progress = playerState.progress,
-            snapshot = snapshot,
-            reducedEffects = playerState.reducedEffects,
-            showSettings = showSettings,
-            showLevelPicker = showLevelPicker,
-            soundEnabled = playerState.soundEnabled,
-            hapticsEnabled = playerState.hapticsEnabled,
-            onToggleSettings = {
-                showLevelPicker = false
-                showSettings = !showSettings
-            },
-            onToggleLevelPicker = {
-                showSettings = false
-                showLevelPicker = !showLevelPicker
-            },
-            onSoundChanged = { enabled ->
-                scope.launch { repository.setSoundEnabled(enabled) }
-            },
-            onHapticsChanged = { enabled ->
-                scope.launch { repository.setHapticsEnabled(enabled) }
-            },
-            onReducedEffectsChanged = { enabled ->
-                scope.launch { repository.setReducedEffects(enabled) }
-            },
-            onSelectLevel = selectLevel,
-            onTap = { position ->
-                if (engine.tap(position)) {
-                    if (playerState.soundEnabled) soundController.playImpulse()
-                    if (playerState.hapticsEnabled) {
-                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                    }
-                    snapshot = engine.snapshot()
-                    showSettings = false
-                    showLevelPicker = false
-                }
-            },
-            onRetry = {
-                showSettings = false
-                showLevelPicker = false
-                attemptId += 1
-            },
-            onNext = {
-                if (level.number < LevelCatalog.levels.size) {
-                    selectLevel(level.number + 1)
-                }
-            },
+    val level = LevelCatalog.get(selectedLevelNumber)
+    val engine = remember(level.number, attemptId) {
+        GameEngine(
+            seed = level.seed,
+            particleCount = level.particleCount,
+            requiredCount = level.requiredCount,
         )
     }
+    var snapshot by remember(engine) { mutableStateOf(engine.snapshot()) }
+    var previousTriggeredCount by remember(engine) { mutableIntStateOf(0) }
+    val soundController = remember(context.applicationContext) {
+        GameSoundController(context.applicationContext)
+    }
+    val view = LocalView.current
+
+    DisposableEffect(soundController) {
+        onDispose { soundController.release() }
+    }
+
+    LaunchedEffect(engine) {
+        var previousFrame = 0L
+        while (isActive) {
+            withFrameNanos { frame ->
+                if (previousFrame != 0L) {
+                    engine.advance((frame - previousFrame) / 1_000_000_000.0)
+                    snapshot = engine.snapshot()
+                }
+                previousFrame = frame
+            }
+        }
+    }
+
+    LaunchedEffect(snapshot.triggeredCount, engine) {
+        val delta = snapshot.triggeredCount - previousTriggeredCount
+        if (delta > 0) {
+            if (playerState.soundEnabled) {
+                soundController.playChain(snapshot.maximumChainDepth, delta)
+            }
+            if (playerState.hapticsEnabled) {
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            }
+        }
+        previousTriggeredCount = snapshot.triggeredCount
+    }
+
+    LaunchedEffect(snapshot.finished, engine) {
+        if (snapshot.finished) {
+            val score = calculateLevelScore(
+                level = level,
+                triggeredCount = snapshot.triggeredCount,
+                maximumChainDepth = snapshot.maximumChainDepth,
+                success = snapshot.success,
+            )
+            val stars = calculateLevelStars(level, snapshot.triggeredCount, snapshot.success)
+            repository.recordResult(level.number, score, stars, snapshot.success)
+            if (playerState.soundEnabled) soundController.playResult(snapshot.success)
+            if (playerState.hapticsEnabled) view.performResultHaptic(snapshot.success)
+        }
+    }
+
+    val selectLevel: (Int) -> Unit = { number ->
+        selectedLevelNumber = number
+        attemptId = 0
+        showSettings = false
+        showLevelPicker = false
+        scope.launch { repository.selectLevel(number) }
+    }
+
+    GameScreen(
+        level = level,
+        progress = playerState.progress,
+        snapshot = snapshot,
+        reducedEffects = playerState.reducedEffects,
+        showSettings = showSettings,
+        showLevelPicker = showLevelPicker,
+        soundEnabled = playerState.soundEnabled,
+        hapticsEnabled = playerState.hapticsEnabled,
+        onToggleSettings = {
+            showLevelPicker = false
+            showSettings = !showSettings
+        },
+        onToggleLevelPicker = {
+            showSettings = false
+            showLevelPicker = !showLevelPicker
+        },
+        onSoundChanged = { enabled ->
+            scope.launch { repository.setSoundEnabled(enabled) }
+        },
+        onHapticsChanged = { enabled ->
+            scope.launch { repository.setHapticsEnabled(enabled) }
+        },
+        onReducedEffectsChanged = { enabled ->
+            scope.launch { repository.setReducedEffects(enabled) }
+        },
+        onSelectLevel = selectLevel,
+        onTap = { position ->
+            if (engine.tap(position)) {
+                if (playerState.soundEnabled) soundController.playImpulse()
+                if (playerState.hapticsEnabled) {
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                }
+                snapshot = engine.snapshot()
+                showSettings = false
+                showLevelPicker = false
+            }
+        },
+        onRetry = {
+            showSettings = false
+            showLevelPicker = false
+            attemptId += 1
+        },
+        onNext = {
+            if (level.number < LevelCatalog.levels.size) {
+                selectLevel(level.number + 1)
+            }
+        },
+    )
 }
 
 @Composable
@@ -692,164 +658,10 @@ private fun androidx.compose.foundation.layout.BoxScope.ResultPanel(
     }
 }
 
-private fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean) {
-    drawRect(
-        brush = Brush.radialGradient(
-            colors = listOf(Color(0xFF0D1731), Background),
-            center = Offset(size.width * 0.5f, size.height * 0.42f),
-            radius = maxOf(size.width, size.height) * 0.82f,
-        ),
-    )
-
-    val viewport = calculateGameViewport(size.width, size.height, snapshot.field)
-    if (viewport.scale <= 0f) return
-
-    clipRect(
-        left = viewport.left,
-        top = viewport.top,
-        right = viewport.left + viewport.width,
-        bottom = viewport.top + viewport.height,
-    ) {
-        if (!reducedEffects) {
-            val impact = snapshot.particles.maxOfOrNull { particle ->
-                if (!particle.triggered) {
-                    0f
-                } else {
-                    (1f - particle.triggeredAgeSeconds.toFloat() / 0.14f).coerceIn(0f, 1f)
-                }
-            } ?: 0f
-            if (impact > 0f) {
-                drawRect(TriggeredGlow.copy(alpha = impact * 0.055f))
-            }
-        }
-
-        snapshot.waves.forEach { wave ->
-            val radius = interpolate(
-                wave.previousRadius,
-                wave.radius,
-                snapshot.interpolationAlpha,
-            ).toFloat() * viewport.scale
-            val maximumRadius = wave.maximumRadius.toFloat() * viewport.scale
-            val progress = (radius / maximumRadius).coerceIn(0f, 1f)
-            val fade = 1f - progress
-            val color = if (wave.chainDepth == 0) ParticleGlow else TriggeredGlow
-            val center = Offset(
-                viewport.left + wave.origin.x.toFloat() * viewport.scale,
-                viewport.top + wave.origin.y.toFloat() * viewport.scale,
-            )
-
-            if (!reducedEffects) {
-                drawCircle(
-                    color = color.copy(alpha = fade * 0.07f),
-                    radius = radius,
-                    center = center,
-                    style = Stroke(width = 18f * fade + 5f),
-                )
-                drawCircle(
-                    color = color.copy(alpha = fade * 0.18f),
-                    radius = (radius - 2f).coerceAtLeast(0f),
-                    center = center,
-                    style = Stroke(width = 7f * fade + 2f),
-                )
-            }
-            drawCircle(
-                color = color.copy(alpha = fade * 0.9f),
-                radius = radius,
-                center = center,
-                style = Stroke(width = 1.8f + fade * 2.2f),
-            )
-        }
-
-        snapshot.particles.forEach { particle ->
-            val position = interpolatePosition(particle, snapshot.interpolationAlpha)
-            val center = Offset(
-                viewport.left + position.x.toFloat() * viewport.scale,
-                viewport.top + position.y.toFloat() * viewport.scale,
-            )
-            val previousCenter = Offset(
-                viewport.left + particle.previousPosition.x.toFloat() * viewport.scale,
-                viewport.top + particle.previousPosition.y.toFloat() * viewport.scale,
-            )
-            val radius = particle.radius.toFloat() * viewport.scale
-            val glow = if (particle.triggered) TriggeredGlow else ParticleGlow
-            val core = if (particle.triggered) TriggeredCore else ParticleCore
-
-            if (!reducedEffects && !particle.triggered) {
-                val delta = center - previousCenter
-                drawLine(
-                    color = glow.copy(alpha = 0.18f),
-                    start = center - delta * 14f,
-                    end = center,
-                    strokeWidth = (radius * 0.7f).coerceAtLeast(1f),
-                    cap = StrokeCap.Round,
-                )
-            }
-
-            if (!reducedEffects) {
-                drawCircle(glow.copy(alpha = 0.08f), radius * 4.4f, center)
-                drawCircle(glow.copy(alpha = 0.18f), radius * 2.5f, center)
-            } else {
-                drawCircle(glow.copy(alpha = 0.14f), radius * 1.8f, center)
-            }
-
-            if (particle.triggered) {
-                val burstLife = (
-                    1f - particle.triggeredAgeSeconds.toFloat() / BURST_DURATION_SECONDS
-                ).coerceIn(0f, 1f)
-                val pulse = 1f + burstLife * 0.34f
-                drawCircle(core, radius * pulse, center)
-                if (!reducedEffects && burstLife > 0f) {
-                    drawActivationBurst(
-                        center = center,
-                        radius = radius,
-                        life = burstLife,
-                        chainDepth = particle.chainDepth,
-                    )
-                }
-            } else {
-                drawCircle(core, radius, center)
-                drawCircle(Color.White.copy(alpha = 0.52f), radius * 0.34f, center)
-            }
-        }
-    }
+private fun starRating(stars: Int): String {
+    val safeStars = stars.coerceIn(0, 3)
+    return "★".repeat(safeStars) + "☆".repeat(3 - safeStars)
 }
-
-private fun DrawScope.drawActivationBurst(
-    center: Offset,
-    radius: Float,
-    life: Float,
-    chainDepth: Int,
-) {
-    val rayCount = 6
-    val distance = radius * (2.2f + (1f - life) * 3.2f)
-    val length = radius * (0.9f + life * 0.8f)
-    val rotation = chainDepth * 0.37f
-
-    repeat(rayCount) { index ->
-        val angle = index * (2.0 * PI / rayCount) + rotation
-        val direction = Offset(cos(angle).toFloat(), sin(angle).toFloat())
-        val start = center + direction * distance
-        val end = start + direction * length
-        drawLine(
-            color = TriggeredCore.copy(alpha = life * 0.72f),
-            start = start,
-            end = end,
-            strokeWidth = (radius * 0.28f).coerceAtLeast(1f),
-            cap = StrokeCap.Round,
-        )
-    }
-}
-
-private fun interpolatePosition(particle: ParticleSnapshot, alpha: Double): Vec2 = Vec2(
-    x = interpolate(particle.previousPosition.x, particle.position.x, alpha),
-    y = interpolate(particle.previousPosition.y, particle.position.y, alpha),
-)
-
-private fun interpolate(start: Double, end: Double, alpha: Double): Double =
-    start + (end - start) * alpha
-
-private fun starRating(stars: Int): String = "★".repeat(stars.coerceIn(0, 3)) +
-    "☆".repeat(3 - stars.coerceIn(0, 3))
 
 private fun View.performResultHaptic(success: Boolean) {
     val feedback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
