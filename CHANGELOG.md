@@ -4,10 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.5.0 - 2026-09-01
+
+### Added
+
+- A dedicated main menu after launch with Continue, New game, Achievements, About, and Exit actions.
+- Continue starts the highest unlocked level, while New game starts from level 1 without deleting saved progress or achievements.
+- A local achievements summary showing the highest unlocked level and total earned stars.
+- Android runtime coverage for the new launch, menu, achievements, About, and navigation flows.
+
 ### Changed
 
+- The branded launch splash now lasts five seconds before opening the main menu instead of entering gameplay directly after three seconds.
+- Android back navigation now returns from gameplay and menu subscreens to the main menu.
 - Reduced avoidable runtime allocation and repeated work in gameplay simulation and sound playback without changing gameplay behavior.
 - Simplified Android and Gradle configuration by removing unused direct dependencies, redundant buildscript setup, obsolete compatibility defaults, and an obsolete Gradle wrapper bootstrap fallback.
+- Qodana now runs in JVM Community mode against `app/src`, preserving scheduled/manual analysis while remaining compatible with AGP 9.3.2.
+- Android version is now 0.5.0 with `versionCode 6`.
 
 ### Removed
 
