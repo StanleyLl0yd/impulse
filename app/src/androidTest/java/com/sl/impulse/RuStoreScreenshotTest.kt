@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.math.min
 import org.junit.Rule
 import org.junit.Test
 
@@ -34,9 +35,7 @@ class RuStoreScreenshotTest {
         composeRule.mainClock.advanceTimeBy(300)
         capture("02-gameplay")
 
-        composeRule.onNodeWithTag("game-canvas").performTouchInput {
-            click(Offset(194f, 907f))
-        }
+        tapGameCoordinate(0.18f, 0.84f)
 
         composeRule.mainClock.advanceTimeBy(600)
         capture("03-reaction-0600")
@@ -45,6 +44,7 @@ class RuStoreScreenshotTest {
         composeRule.mainClock.advanceTimeBy(10_000)
 
         composeRule.onNodeWithTag("result").assertExists()
+        composeRule.onNodeWithTag("result-stars").assertExists()
         capture("05-result-success")
         Thread.sleep(250)
 
@@ -57,6 +57,24 @@ class RuStoreScreenshotTest {
         composeRule.onNodeWithTag("menu-achievements").performClick()
         advanceUntilExists("achievements-screen")
         capture("07-achievements")
+    }
+
+    private fun tapGameCoordinate(gameX: Float, gameY: Float) {
+        val canvas = composeRule.onNodeWithTag("game-canvas")
+        val bounds = canvas.fetchSemanticsNode().boundsInRoot
+        val fieldWidth = 1f
+        val fieldHeight = 16f / 9f
+        val scale = min(bounds.width / fieldWidth, bounds.height / fieldHeight)
+        val viewportLeft = (bounds.width - fieldWidth * scale) / 2f
+        val viewportTop = (bounds.height - fieldHeight * scale) / 2f
+        canvas.performTouchInput {
+            click(
+                Offset(
+                    x = viewportLeft + gameX * scale,
+                    y = viewportTop + gameY * scale,
+                ),
+            )
+        }
     }
 
     private fun useRussianLocale() {
