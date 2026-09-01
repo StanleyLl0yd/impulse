@@ -65,6 +65,8 @@ import com.sl.impulse.progress.ProgressState
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+private val LevelRows = LevelCatalog.levels.chunked(4)
+
 @Composable
 internal fun ImpulseGame(
     repository: PlayerStateRepository,
@@ -103,13 +105,15 @@ internal fun ImpulseGame(
     LaunchedEffect(engine) {
         var previousFrame = 0L
         while (isActive) {
-            withFrameNanos { frame ->
+            val finished = withFrameNanos { frame ->
                 if (previousFrame != 0L) {
                     engine.advance((frame - previousFrame) / 1_000_000_000.0)
                     snapshot = engine.snapshot()
                 }
                 previousFrame = frame
+                snapshot.finished
             }
+            if (finished) break
         }
     }
 
@@ -463,7 +467,7 @@ private fun LevelPicker(
                 fontSize = 13.sp,
             )
 
-            LevelCatalog.levels.chunked(4).forEach { rowLevels ->
+            LevelRows.forEach { rowLevels ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth(),
