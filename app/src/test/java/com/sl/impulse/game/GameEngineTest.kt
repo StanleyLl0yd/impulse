@@ -1,4 +1,4 @@
-package io.github.stanleyll0yd.impulse.game
+package com.sl.impulse.game
 
 import kotlin.math.hypot
 import org.junit.Assert.assertEquals

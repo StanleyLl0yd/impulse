@@ -33,10 +33,14 @@ jobs:
           set -euo pipefail
           version_name="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
           version_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -1)"
+          namespace="$(sed -n 's/^[[:space:]]*namespace = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          application_id="$(sed -n 's/^[[:space:]]*applicationId = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
           tag="v$version_name"
 
           [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$version_code" =~ ^[0-9]+$ ]]
+          test "$namespace" = "com.sl.impulse"
+          test "$application_id" = "com.sl.impulse"
           test -f ".github/release-notes/$tag.md"
           grep -Fq "## $version_name -" CHANGELOG.md
 

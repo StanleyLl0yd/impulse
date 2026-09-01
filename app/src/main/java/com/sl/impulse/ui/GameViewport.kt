@@ -1,7 +1,7 @@
-package io.github.stanleyll0yd.impulse.ui
+package com.sl.impulse.ui
 
-import io.github.stanleyll0yd.impulse.game.GameField
-import io.github.stanleyll0yd.impulse.game.Vec2
+import com.sl.impulse.game.GameField
+import com.sl.impulse.game.Vec2
 import kotlin.math.min
 
 internal data class GameViewport(

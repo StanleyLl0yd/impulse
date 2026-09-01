@@ -22,7 +22,7 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **0.3.0** (`versionCode 3`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **0.3.1** (`versionCode 4`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
@@ -69,7 +69,7 @@ The simulation is deterministic and seedable so the same level state can be repr
 
 ## 📦 Availability
 
-The latest public prototype, **IMPULSE 0.3.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.3.0) with signed APK and AAB artifacts plus SHA-256 checksums.
+The latest public prototype, **IMPULSE 0.3.1**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.3.1) with signed APK and AAB artifacts plus SHA-256 checksums.
 
 The repository is publicly visible for project transparency and review. **Public visibility does not grant permission to copy, build, modify, execute, redistribute, or otherwise use the source code or assets.** See [LICENSE](LICENSE).
 
@@ -113,6 +113,7 @@ Windows:
 | Simulation | Custom deterministic fixed-step 2D engine |
 | Build | Gradle 9.7.1, AGP 9.3.2, Kotlin DSL |
 | Android | minSdk 26, targetSdk 37, compileSdk 37 |
+| Application ID / namespace | `com.sl.impulse` |
 
 Gameplay state and simulation are kept separate from rendering so visual polish can evolve without turning the renderer into the game engine.
 

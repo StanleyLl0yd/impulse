@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.3.1 - 2026-08-31
+
+### Added
+
+- Soft melodic game audio for the player impulse, chain growth, success, and failure.
+
+### Changed
+
+- Android Application ID / Bundle ID, namespace, source packages, and test packages are permanently `com.sl.impulse`.
+- Launch splash now uses the exact supplied 941×1672 IMPULSE artwork while retaining the three-second fade from pure black.
+- CI, release tagging, and signed-release validation now enforce the canonical application identity.
+
+### Removed
+
+- Android `ToneGenerator` system beeps from gameplay feedback.
+
 ## 0.3.0 - 2026-08-31
 
 ### Added

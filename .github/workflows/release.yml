@@ -51,9 +51,13 @@ jobs:
 
           version_name="$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
           version_code="$(sed -n 's/^[[:space:]]*versionCode = \([0-9][0-9]*\).*/\1/p' app/build.gradle.kts | head -1)"
+          namespace="$(sed -n 's/^[[:space:]]*namespace = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          application_id="$(sed -n 's/^[[:space:]]*applicationId = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
           test -n "$version_name"
           [[ "$version_code" =~ ^[0-9]+$ ]]
           (( version_code > 0 ))
+          test "$namespace" = "com.sl.impulse"
+          test "$application_id" = "com.sl.impulse"
           test "$RELEASE_TAG" = "v$version_name"
 
           max_previous_code=0
@@ -76,7 +80,7 @@ jobs:
             exit 1
           fi
 
-          echo "Validated $RELEASE_TAG with versionCode $version_code"
+          echo "Validated $RELEASE_TAG with versionCode $version_code and application ID $application_id"
 
       - name: Require successful main verification
         env:
@@ -201,6 +205,11 @@ jobs:
           source_aab="app/build/outputs/bundle/release/app-release.aab"
           test -s "$source_apk"
           test -s "$source_aab"
+
+          aapt="$(find "$ANDROID_HOME/build-tools" -type f -name aapt -print | sort -V | tail -1)"
+          test -n "$aapt"
+          package_name="$("$aapt" dump badging "$source_apk" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -1)"
+          test "$package_name" = "com.sl.impulse"
 
           expected="$(printf '%s' "$EXPECTED_CERT_SHA256" | tr -d ':' | tr '[:upper:]' '[:lower:]')"
           apksigner="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner -print | sort -V | tail -1)"

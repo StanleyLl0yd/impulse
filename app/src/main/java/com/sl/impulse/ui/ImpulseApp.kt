@@ -1,4 +1,4 @@
-package io.github.stanleyll0yd.impulse.ui
+package com.sl.impulse.ui
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -46,18 +46,19 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.stanleyll0yd.impulse.R
-import io.github.stanleyll0yd.impulse.feedback.GameSoundController
-import io.github.stanleyll0yd.impulse.game.GameEngine
-import io.github.stanleyll0yd.impulse.game.GameSnapshot
-import io.github.stanleyll0yd.impulse.game.ParticleSnapshot
-import io.github.stanleyll0yd.impulse.game.Vec2
+import com.sl.impulse.R
+import com.sl.impulse.feedback.GameSoundController
+import com.sl.impulse.game.GameEngine
+import com.sl.impulse.game.GameSnapshot
+import com.sl.impulse.game.ParticleSnapshot
+import com.sl.impulse.game.Vec2
 import kotlinx.coroutines.isActive
 import kotlin.math.PI
 import kotlin.math.cos
@@ -92,7 +93,10 @@ fun ImpulseApp() {
         val engine = remember(gameId) { GameEngine(seed = GameEngine.DEFAULT_SEED + gameId) }
         var snapshot by remember(engine) { mutableStateOf(engine.snapshot()) }
         var previousTriggeredCount by remember(engine) { mutableIntStateOf(0) }
-        val soundController = remember { GameSoundController() }
+        val context = LocalContext.current
+        val soundController = remember(context.applicationContext) {
+            GameSoundController(context.applicationContext)
+        }
         val view = LocalView.current
 
         DisposableEffect(soundController) {

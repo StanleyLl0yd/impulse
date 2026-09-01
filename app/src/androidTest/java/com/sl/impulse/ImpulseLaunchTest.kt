@@ -1,4 +1,4 @@
-package io.github.stanleyll0yd.impulse
+package com.sl.impulse
 
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule

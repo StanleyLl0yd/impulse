@@ -28,6 +28,19 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify application identity
+        run: |
+          set -euo pipefail
+          namespace="$(sed -n 's/^[[:space:]]*namespace = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          application_id="$(sed -n 's/^[[:space:]]*applicationId = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)"
+          test "$namespace" = "com.sl.impulse"
+          test "$application_id" = "com.sl.impulse"
+          legacy_id="io.github.stanleyll0yd"".impulse"
+          if git grep -nF "$legacy_id"; then
+            echo "Legacy application identity remains in the repository." >&2
+            exit 1
+          fi
+
       - name: Set up Android build environment
         uses: ./.github/actions/android-gradle-setup
         with:

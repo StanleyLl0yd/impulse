@@ -1,6 +1,6 @@
-package io.github.stanleyll0yd.impulse.ui
+package com.sl.impulse.ui
 
-import io.github.stanleyll0yd.impulse.game.GameField
+import com.sl.impulse.game.GameField
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

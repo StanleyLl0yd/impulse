@@ -16,6 +16,8 @@ The certificate SHA-256 value is used by CI to verify that both the APK and AAB 
 
 ## Publishing a GitHub release
 
+The permanent Android Application ID / Bundle ID and namespace are `com.sl.impulse`. Release validation rejects any other package identity.
+
 1. Update `versionCode` and `versionName` in `app/build.gradle.kts`. `versionCode` must be greater than every previous semver release.
 2. Update `CHANGELOG.md` and add `.github/release-notes/vX.Y.Z.md`.
 3. Merge the version change through a normal PR.

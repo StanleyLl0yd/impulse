@@ -1,4 +1,4 @@
-package io.github.stanleyll0yd.impulse.ui
+package com.sl.impulse.ui
 
 import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import io.github.stanleyll0yd.impulse.R
+import com.sl.impulse.R
 
 private const val SPLASH_FADE_DURATION_MILLIS = 3_000
 
