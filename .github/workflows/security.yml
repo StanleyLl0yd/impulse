@@ -77,6 +77,6 @@ jobs:
       - name: Run Qodana
         uses: JetBrains/qodana-action@b588768b6e7e6da579e518bc584f79de0d243692
         with:
-          args: --within-docker,false,--print-problems
+          args: --linter qodana-jvm-community --within-docker false --only-directory app/src --print-problems
           upload-result: true
           artifact-name: qodana-report
