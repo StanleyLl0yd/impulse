@@ -7,11 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Reduced avoidable runtime allocation and repeated work in gameplay simulation and sound playback without changing gameplay behavior.
-- Simplified Android and Gradle configuration by removing unused direct dependencies, redundant buildscript setup, and an obsolete Gradle wrapper bootstrap fallback.
+- Simplified Android and Gradle configuration by removing unused direct dependencies, redundant buildscript setup, obsolete compatibility defaults, and an obsolete Gradle wrapper bootstrap fallback.
 
 ### Removed
 
-- Unused localized chain-result resources, a duplicate round launcher resource, and the empty project-specific ProGuard rules file.
+- Unused localized chain-result resources, a duplicate round launcher resource, unused Compose test/tooling declarations, and the empty project-specific ProGuard rules file.
 
 ## 0.4.0 - 2026-09-01
 
@@ -64,7 +64,7 @@ All notable changes to this project will be documented in this file.
 
 - Layered neon wave rendering, particle trails, activation flashes, pulse bursts, and depth-reactive visual feedback.
 - Sound feedback for the initial impulse, chain reactions, success, and failure without adding network or analytics dependencies.
-- Haptic feedback for taps, chain activations, success, and failure using platform haptic feedback.
+- Haptic feedback for taps, chain activations, and final results using platform haptic feedback.
 - In-session Game Feel controls for sound, haptics, and reduced effects.
 - Near-miss result messaging and a stronger result/retry panel.
 - A 200-particle chain-reaction stress scenario in unit tests.
