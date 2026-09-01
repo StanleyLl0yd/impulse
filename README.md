@@ -22,7 +22,7 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **0.3.1** (`versionCode 4`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **0.4.0** (`versionCode 5`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
@@ -31,45 +31,51 @@ Current source version: **0.3.1** (`versionCode 4`) · Min SDK: **26 (Android 8.
 3. Let the wave expand and trigger nearby particles.
 4. Triggered particles emit their own waves.
 5. Reach the target before the reaction dies out — or retry immediately.
+6. Complete levels, improve the score, and collect up to three stars per level.
 
-The prototype currently starts with **20 moving particles** and requires **12 activations** for success.
+The current campaign contains **20 deterministic levels** with increasing particle counts and completion targets.
 
 > One tap. One impulse. Maximum chain.
 
 ## ✨ Current prototype
 
 - One-touch gameplay with a single impulse per attempt
+- 20 data-driven deterministic levels with increasing targets
+- Level unlocking, next-level flow, and a compact campaign picker
+- Per-level score, 1–3 star evaluation, best-score tracking, and total-star progress
+- Local persistence for progress, selected level, best results, and Game Feel settings through AndroidX DataStore
 - Moving particles with wall reflection
 - Expanding player and reaction waves
 - Chain depth tracking and triggered-particle counter
-- Instant retry with a new deterministic seed
+- Instant deterministic retry of the same level
 - Frame-rate-independent fixed-step simulation
 - Layered neon waves, trails, activation flashes, pulse bursts, and depth-reactive visual feedback
 - Sound and haptic feedback for taps, chain activations, success, and failure
-- In-session controls for sound, haptics, and reduced effects
-- Near-miss messaging and a stronger result/retry panel
+- Persistent controls for sound, haptics, and reduced effects
+- Near-miss messaging and result/retry/next-level UX
 - Cinematic launch from pure black with the IMPULSE artwork fading in over three seconds
 - Russian and English interface resources
 - Portrait-first Android experience
 - No account, backend, analytics, ads, or network permission
 
-The current build is deliberately focused on one question: **is the chain reaction itself satisfying enough to build the full game around it?**
+The current build now provides a complete local campaign loop: **choose a level, make one impulse, earn a result, persist progress, and continue or improve the same deterministic challenge.**
 
 ## 🎮 Game feel
 
 IMPULSE is designed around clarity and escalation rather than visual noise:
 
 - **launch** — the app opens from pure black and reveals the IMPULSE artwork over three seconds;
+- **campaign** — unlocked levels expose their best star result and the campaign tracks total stars;
 - **idle** — cool cyan particles move quietly across the field;
 - **tap** — one cyan impulse expands from the chosen point;
 - **chain** — triggered particles switch to violet/magenta and emit new waves;
-- **result** — success, failure, and near misses resolve quickly so another attempt is never far away.
+- **result** — score, stars, success, failure, and near misses resolve quickly so retry or the next level is one step away.
 
-The simulation is deterministic and seedable so the same level state can be reproduced across devices and tests, while rendering remains free to run at the display refresh rate.
+The simulation is deterministic and seedable so each level can be reproduced across devices, retries, and tests, while rendering remains free to run at the display refresh rate.
 
 ## 📦 Availability
 
-The latest public prototype, **IMPULSE 0.3.1**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.3.1) with signed APK and AAB artifacts plus SHA-256 checksums.
+The latest public build, **IMPULSE 0.4.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.4.0) with signed APK and AAB artifacts plus SHA-256 checksums.
 
 The repository is publicly visible for project transparency and review. **Public visibility does not grant permission to copy, build, modify, execute, redistribute, or otherwise use the source code or assets.** See [LICENSE](LICENSE).
 
@@ -111,11 +117,12 @@ Windows:
 | UI | Jetpack Compose + Material 3 |
 | Rendering | Compose Canvas |
 | Simulation | Custom deterministic fixed-step 2D engine |
+| Persistence | AndroidX DataStore Preferences 1.2.1 |
 | Build | Gradle 9.7.1, AGP 9.3.2, Kotlin DSL |
 | Android | minSdk 26, targetSdk 37, compileSdk 37 |
 | Application ID / namespace | `com.sl.impulse` |
 
-Gameplay state and simulation are kept separate from rendering so visual polish can evolve without turning the renderer into the game engine.
+Gameplay state and simulation are kept separate from rendering, while campaign progress and preferences are stored locally outside the engine.
 
 ## ✅ Quality and security checks
 
@@ -157,6 +164,7 @@ The keystore and signing passwords are never stored in the repository. See [docs
 
 - **Offline by default** — the app does not request Android `INTERNET` permission
 - **No account, analytics, tracking, or advertising**
+- Progress and settings are stored locally on the device through DataStore
 - No backend or cloud dependency
 - No dangerous Android runtime permissions in the current scope
 
@@ -171,10 +179,10 @@ The interface follows the device language through Android resources.
 
 ## 🗺 Roadmap
 
-- **Current:** one-tap prototype, deterministic simulation, visual/audio/haptic game feel, result UX, and cinematic launch
-- **Next:** data-driven level definitions, progression, scoring, and local persistence
-- **Content:** roughly 60 handcrafted/generated levels for the first complete release
-- **Later:** tutorial, accessibility pass, local statistics, endless mode, and daily challenge after the core level loop is proven
+- **Current:** 20-level deterministic campaign, unlocking, scoring, stars, local persistence, polished visual/audio/haptic game feel, and cinematic launch
+- **Next:** level balancing, tutorial/onboarding, accessibility pass, and richer local statistics
+- **Content:** expand toward roughly 60 handcrafted/generated levels for the first complete release
+- **Later:** endless mode and daily challenge after the core campaign loop is proven
 
 The product direction is tracked in [PROJECT.md](PROJECT.md).
 
