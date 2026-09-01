@@ -9,15 +9,20 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -29,10 +34,12 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -57,9 +64,17 @@ import com.sl.impulse.R
 import com.sl.impulse.feedback.GameSoundController
 import com.sl.impulse.game.GameEngine
 import com.sl.impulse.game.GameSnapshot
+import com.sl.impulse.game.LevelCatalog
+import com.sl.impulse.game.LevelDefinition
 import com.sl.impulse.game.ParticleSnapshot
 import com.sl.impulse.game.Vec2
+import com.sl.impulse.game.calculateLevelScore
+import com.sl.impulse.game.calculateLevelStars
+import com.sl.impulse.progress.PlayerState
+import com.sl.impulse.progress.PlayerStateRepository
+import com.sl.impulse.progress.ProgressState
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -85,15 +100,31 @@ fun ImpulseApp() {
             onSurface = Color.White,
         ),
     ) {
-        var gameId by remember { mutableIntStateOf(0) }
-        var soundEnabled by rememberSaveable { mutableStateOf(true) }
-        var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
-        var reducedEffects by rememberSaveable { mutableStateOf(false) }
+        val context = LocalContext.current
+        val repository = remember(context.applicationContext) {
+            PlayerStateRepository(context.applicationContext)
+        }
+        val playerState by repository.state.collectAsState(initial = PlayerState())
+        val scope = rememberCoroutineScope()
+        var selectedLevelNumber by rememberSaveable { mutableIntStateOf(1) }
+        var attemptId by remember { mutableIntStateOf(0) }
         var showSettings by rememberSaveable { mutableStateOf(false) }
-        val engine = remember(gameId) { GameEngine(seed = GameEngine.DEFAULT_SEED + gameId) }
+        var showLevelPicker by rememberSaveable { mutableStateOf(false) }
+
+        LaunchedEffect(playerState.selectedLevel) {
+            selectedLevelNumber = playerState.selectedLevel.coerceIn(1, LevelCatalog.levels.size)
+        }
+
+        val level = LevelCatalog.get(selectedLevelNumber)
+        val engine = remember(level.number, attemptId) {
+            GameEngine(
+                seed = level.seed,
+                particleCount = level.particleCount,
+                requiredCount = level.requiredCount,
+            )
+        }
         var snapshot by remember(engine) { mutableStateOf(engine.snapshot()) }
         var previousTriggeredCount by remember(engine) { mutableIntStateOf(0) }
-        val context = LocalContext.current
         val soundController = remember(context.applicationContext) {
             GameSoundController(context.applicationContext)
         }
@@ -119,10 +150,10 @@ fun ImpulseApp() {
         LaunchedEffect(snapshot.triggeredCount, engine) {
             val delta = snapshot.triggeredCount - previousTriggeredCount
             if (delta > 0) {
-                if (soundEnabled) {
+                if (playerState.soundEnabled) {
                     soundController.playChain(snapshot.maximumChainDepth, delta)
                 }
-                if (hapticsEnabled) {
+                if (playerState.hapticsEnabled) {
                     view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                 }
             }
@@ -131,34 +162,74 @@ fun ImpulseApp() {
 
         LaunchedEffect(snapshot.finished, engine) {
             if (snapshot.finished) {
-                if (soundEnabled) soundController.playResult(snapshot.success)
-                if (hapticsEnabled) view.performResultHaptic(snapshot.success)
+                val score = calculateLevelScore(
+                    level = level,
+                    triggeredCount = snapshot.triggeredCount,
+                    maximumChainDepth = snapshot.maximumChainDepth,
+                    success = snapshot.success,
+                )
+                val stars = calculateLevelStars(level, snapshot.triggeredCount, snapshot.success)
+                repository.recordResult(level.number, score, stars, snapshot.success)
+                if (playerState.soundEnabled) soundController.playResult(snapshot.success)
+                if (playerState.hapticsEnabled) view.performResultHaptic(snapshot.success)
             }
         }
 
+        val selectLevel: (Int) -> Unit = { number ->
+            selectedLevelNumber = number
+            attemptId = 0
+            showSettings = false
+            showLevelPicker = false
+            scope.launch { repository.selectLevel(number) }
+        }
+
         GameScreen(
+            level = level,
+            progress = playerState.progress,
             snapshot = snapshot,
-            reducedEffects = reducedEffects,
+            reducedEffects = playerState.reducedEffects,
             showSettings = showSettings,
-            soundEnabled = soundEnabled,
-            hapticsEnabled = hapticsEnabled,
-            onToggleSettings = { showSettings = !showSettings },
-            onSoundChanged = { soundEnabled = it },
-            onHapticsChanged = { hapticsEnabled = it },
-            onReducedEffectsChanged = { reducedEffects = it },
+            showLevelPicker = showLevelPicker,
+            soundEnabled = playerState.soundEnabled,
+            hapticsEnabled = playerState.hapticsEnabled,
+            onToggleSettings = {
+                showLevelPicker = false
+                showSettings = !showSettings
+            },
+            onToggleLevelPicker = {
+                showSettings = false
+                showLevelPicker = !showLevelPicker
+            },
+            onSoundChanged = { enabled ->
+                scope.launch { repository.setSoundEnabled(enabled) }
+            },
+            onHapticsChanged = { enabled ->
+                scope.launch { repository.setHapticsEnabled(enabled) }
+            },
+            onReducedEffectsChanged = { enabled ->
+                scope.launch { repository.setReducedEffects(enabled) }
+            },
+            onSelectLevel = selectLevel,
             onTap = { position ->
                 if (engine.tap(position)) {
-                    if (soundEnabled) soundController.playImpulse()
-                    if (hapticsEnabled) {
+                    if (playerState.soundEnabled) soundController.playImpulse()
+                    if (playerState.hapticsEnabled) {
                         view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     }
                     snapshot = engine.snapshot()
                     showSettings = false
+                    showLevelPicker = false
                 }
             },
             onRetry = {
                 showSettings = false
-                gameId += 1
+                showLevelPicker = false
+                attemptId += 1
+            },
+            onNext = {
+                if (level.number < LevelCatalog.levels.size) {
+                    selectLevel(level.number + 1)
+                }
             },
         )
     }
@@ -166,18 +237,26 @@ fun ImpulseApp() {
 
 @Composable
 private fun GameScreen(
+    level: LevelDefinition,
+    progress: ProgressState,
     snapshot: GameSnapshot,
     reducedEffects: Boolean,
     showSettings: Boolean,
+    showLevelPicker: Boolean,
     soundEnabled: Boolean,
     hapticsEnabled: Boolean,
     onToggleSettings: () -> Unit,
+    onToggleLevelPicker: () -> Unit,
     onSoundChanged: (Boolean) -> Unit,
     onHapticsChanged: (Boolean) -> Unit,
     onReducedEffectsChanged: (Boolean) -> Unit,
+    onSelectLevel: (Int) -> Unit,
     onTap: (Vec2) -> Unit,
     onRetry: () -> Unit,
+    onNext: () -> Unit,
 ) {
+    val inputBlocked = showSettings || showLevelPicker
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -188,9 +267,16 @@ private fun GameScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .testTag("game-canvas")
-                .pointerInput(snapshot.field, snapshot.impulseUsed, snapshot.finished) {
+                .pointerInput(
+                    snapshot.field,
+                    snapshot.impulseUsed,
+                    snapshot.finished,
+                    inputBlocked,
+                ) {
                     detectTapGestures { offset ->
-                        if (snapshot.impulseUsed || snapshot.finished) return@detectTapGestures
+                        if (inputBlocked || snapshot.impulseUsed || snapshot.finished) {
+                            return@detectTapGestures
+                        }
                         val viewport = calculateGameViewport(
                             canvasWidth = size.width.toFloat(),
                             canvasHeight = size.height.toFloat(),
@@ -202,6 +288,20 @@ private fun GameScreen(
                 },
         ) {
             drawGame(snapshot, reducedEffects)
+        }
+
+        TextButton(
+            onClick = onToggleLevelPicker,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 5.dp, start = 6.dp)
+                .testTag("level-button"),
+        ) {
+            Text(
+                text = stringResource(R.string.level_short, level.number),
+                color = ParticleCore.copy(alpha = 0.82f),
+                fontWeight = FontWeight.Bold,
+            )
         }
 
         Text(
@@ -243,7 +343,18 @@ private fun GameScreen(
             )
         }
 
-        if (!snapshot.impulseUsed && !showSettings) {
+        if (showLevelPicker && !snapshot.finished) {
+            LevelPicker(
+                selectedLevel = level.number,
+                progress = progress,
+                onSelectLevel = onSelectLevel,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 18.dp),
+            )
+        }
+
+        if (!snapshot.impulseUsed && !inputBlocked) {
             Text(
                 text = stringResource(R.string.game_hint),
                 color = Color.White.copy(alpha = 0.62f),
@@ -256,7 +367,21 @@ private fun GameScreen(
         }
 
         if (snapshot.finished) {
-            ResultPanel(snapshot = snapshot, onRetry = onRetry)
+            val score = calculateLevelScore(
+                level = level,
+                triggeredCount = snapshot.triggeredCount,
+                maximumChainDepth = snapshot.maximumChainDepth,
+                success = snapshot.success,
+            )
+            val stars = calculateLevelStars(level, snapshot.triggeredCount, snapshot.success)
+            ResultPanel(
+                snapshot = snapshot,
+                score = score,
+                stars = stars,
+                hasNextLevel = snapshot.success && level.number < LevelCatalog.levels.size,
+                onRetry = onRetry,
+                onNext = onNext,
+            )
         }
     }
 }
@@ -336,9 +461,108 @@ private fun SettingRow(
 }
 
 @Composable
+private fun LevelPicker(
+    selectedLevel: Int,
+    progress: ProgressState,
+    onSelectLevel: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = PanelBackground.copy(alpha = 0.98f),
+        shape = RoundedCornerShape(26.dp),
+        modifier = modifier
+            .widthIn(max = 380.dp)
+            .testTag("level-picker"),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .padding(horizontal = 18.dp, vertical = 18.dp)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Text(
+                text = stringResource(R.string.level_picker_title),
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.4.sp,
+            )
+            Text(
+                text = stringResource(
+                    R.string.total_stars,
+                    progress.totalStars,
+                    LevelCatalog.levels.size * 3,
+                ),
+                color = TriggeredCore.copy(alpha = 0.82f),
+                fontSize = 13.sp,
+            )
+
+            LevelCatalog.levels.chunked(4).forEach { rowLevels ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    rowLevels.forEach { level ->
+                        val unlocked = progress.isUnlocked(level.number)
+                        val selected = level.number == selectedLevel
+                        val stars = progress.stars(level.number)
+                        Button(
+                            onClick = { onSelectLevel(level.number) },
+                            enabled = unlocked,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selected) TriggeredGlow else Color(0xFF15203A),
+                                contentColor = Color.White,
+                                disabledContainerColor = Color(0xFF090D19),
+                                disabledContentColor = Color.White.copy(alpha = 0.24f),
+                            ),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("level-${level.number}"),
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = level.number.toString().padStart(2, '0'),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                )
+                                if (unlocked) {
+                                    Text(
+                                        text = starRating(stars),
+                                        color = if (stars > 0) TriggeredCore else Color.White.copy(alpha = 0.28f),
+                                        fontSize = 10.sp,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    repeat(4 - rowLevels.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            val bestScore = progress.bestScore(selectedLevel)
+            if (bestScore > 0) {
+                Text(
+                    text = stringResource(R.string.best_score, bestScore),
+                    color = ParticleCore.copy(alpha = 0.68f),
+                    fontSize = 12.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun androidx.compose.foundation.layout.BoxScope.ResultPanel(
     snapshot: GameSnapshot,
+    score: Int,
+    stars: Int,
+    hasNextLevel: Boolean,
     onRetry: () -> Unit,
+    onNext: () -> Unit,
 ) {
     val missing = (snapshot.requiredCount - snapshot.triggeredCount).coerceAtLeast(0)
     val nearMiss = !snapshot.success && missing <= 2
@@ -393,6 +617,21 @@ private fun androidx.compose.foundation.layout.BoxScope.ResultPanel(
                 color = Color.White.copy(alpha = 0.72f),
                 fontSize = 14.sp,
             )
+            if (snapshot.success) {
+                Text(
+                    text = starRating(stars),
+                    color = TriggeredCore,
+                    fontSize = 22.sp,
+                    letterSpacing = 3.sp,
+                    modifier = Modifier.testTag("result-stars"),
+                )
+            }
+            Text(
+                text = stringResource(R.string.score_result, score),
+                color = ParticleCore.copy(alpha = 0.72f),
+                fontSize = 13.sp,
+                modifier = Modifier.testTag("result-score"),
+            )
             if (snapshot.triggeredCount > 0) {
                 Text(
                     text = stringResource(
@@ -403,21 +642,52 @@ private fun androidx.compose.foundation.layout.BoxScope.ResultPanel(
                     fontSize = 13.sp,
                 )
             }
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = accent,
-                    contentColor = Background,
-                ),
-                modifier = Modifier
-                    .padding(top = 5.dp)
-                    .fillMaxWidth()
-                    .testTag("retry"),
-            ) {
-                Text(
-                    text = stringResource(R.string.retry),
-                    fontWeight = FontWeight.Bold,
-                )
+            if (hasNextLevel) {
+                Button(
+                    onClick = onNext,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = accent,
+                        contentColor = Background,
+                    ),
+                    modifier = Modifier
+                        .padding(top = 5.dp)
+                        .fillMaxWidth()
+                        .testTag("next-level"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.next_level),
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                TextButton(
+                    onClick = onRetry,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("retry"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.retry),
+                        color = ParticleCore,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            } else {
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = accent,
+                        contentColor = Background,
+                    ),
+                    modifier = Modifier
+                        .padding(top = 5.dp)
+                        .fillMaxWidth()
+                        .testTag("retry"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.retry),
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
     }
@@ -578,6 +848,9 @@ private fun interpolatePosition(particle: ParticleSnapshot, alpha: Double): Vec2
 
 private fun interpolate(start: Double, end: Double, alpha: Double): Double =
     start + (end - start) * alpha
+
+private fun starRating(stars: Int): String = "★".repeat(stars.coerceIn(0, 3)) +
+    "☆".repeat(3 - stars.coerceIn(0, 3))
 
 private fun View.performResultHaptic(success: Boolean) {
     val feedback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
