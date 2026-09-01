@@ -36,9 +36,17 @@ Level completion is based on `triggeredParticles >= requiredTriggeredCount` afte
 
 If multiple wave fronts reach a particle during the same fixed simulation step, the collision is attributed to the earliest impact within that step. Equal-time contacts prefer the deeper chain and otherwise preserve deterministic wave order.
 
+## Campaign and progression
+
+The 0.4.0 campaign contains 20 ordered data-driven levels. Each level defines a stable seed, particle count, and required activation count. Retrying a level recreates the same deterministic simulation so improvement comes from timing and placement rather than rerolling the board.
+
+A successful level unlocks the next level. Each attempt receives a numeric score based on activated particles, chain depth, completion, and activations beyond the minimum target. Successful attempts receive one to three stars: one for completion, two for reaching the level's bonus threshold, and three for activating every particle.
+
+Best per-level score, best star result, highest unlocked level, selected level, and Game Feel settings are stored locally through AndroidX DataStore Preferences. Progress is intentionally device-local; there is no account, cloud sync, or backend dependency.
+
 ## MVP
 
-The first useful MVP should contain 20 levels, standard particles, one impulse per attempt, chain reactions, progress saving, sound, haptics, basic settings, Russian and English localization. Ads, purchases, leaderboards, accounts, cloud sync and complex content are explicitly outside the MVP.
+The first useful MVP contains 20 deterministic levels, standard particles, one impulse per attempt, chain reactions, local progression saving, scoring/stars, sound, haptics, basic settings, and Russian and English localization. Ads, purchases, leaderboards, accounts, cloud sync and complex content are explicitly outside the MVP.
 
 ## Version 1.0 direction
 
@@ -46,7 +54,7 @@ Target roughly 60 levels, polished visuals/audio, gradually introduced special p
 
 ## Architecture
 
-Gameplay logic belongs under `game/` and must not depend on Compose drawing decisions. Rendering reads game snapshots. Levels should become data-driven and deterministic. Persistence should remain local; add DataStore when progression/settings are implemented.
+Gameplay logic belongs under `game/` and must not depend on Compose drawing decisions. Rendering reads game snapshots. Level definitions live in a deterministic catalog and configure the engine without moving campaign state into simulation code. Persistence belongs outside the engine and uses DataStore for progression and settings.
 
 The simulation uses canonical logical coordinates. UI code maps that field to the available canvas with a uniform scale and letterboxing when necessary; taps outside the logical playfield do not affect gameplay.
 
@@ -54,9 +62,11 @@ The simulation uses canonical logical coordinates. UI code maps that field to th
 
 - Fixed 60 Hz simulation with smooth interpolated rendering on 60/90/120/144 Hz displays.
 - Identical logical gameplay geometry and seeded outcomes across device aspect ratios.
+- Deterministic retry for every campaign level.
 - Avoid per-frame allocation pressure where practical.
-- Unit-test deterministic gameplay rules, field geometry and viewport mapping.
+- Unit-test deterministic gameplay rules, level catalog/scoring/progression rules, field geometry and viewport mapping.
 - Run Android lint and release builds in CI.
+- Runtime-test launch, level selection, settings, and tap-result-retry flows.
 - Stress-test larger chain reactions before content expansion.
 - No unnecessary permissions, SDKs, dependencies, exported components or cleartext network traffic.
 

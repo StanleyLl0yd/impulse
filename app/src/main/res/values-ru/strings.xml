@@ -4,6 +4,12 @@
     <string name="chain_result">ЦЕПОЧКА %1$d</string>
     <string name="chain_depth">Глубина %1$d</string>
     <string name="retry">Ещё раз</string>
+    <string name="next_level">Следующий уровень</string>
+    <string name="level_short">УРОВЕНЬ %1$d</string>
+    <string name="level_picker_title">УРОВНИ</string>
+    <string name="total_stars">%1$d / %2$d ЗВЁЗД</string>
+    <string name="score_result">СЧЁТ %1$d</string>
+    <string name="best_score">РЕКОРД %1$d</string>
     <string name="settings_short">FX</string>
     <string name="settings_title">Ощущение игры</string>
     <string name="settings_sound">Звук</string>

@@ -17,7 +17,19 @@ class ImpulseLaunchTest {
         finishSplash()
         composeRule.onNodeWithTag("game-canvas").assertExists()
         composeRule.onNodeWithTag("game-hint").assertExists()
+        composeRule.onNodeWithTag("level-button").assertExists()
         composeRule.onNodeWithTag("settings-button").assertExists()
+    }
+
+    @Test
+    fun levelPickerShowsCampaign() {
+        finishSplash()
+
+        composeRule.onNodeWithTag("level-button").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+        composeRule.onNodeWithTag("level-picker").assertExists()
+        composeRule.onNodeWithTag("level-1").assertExists()
+        composeRule.onNodeWithTag("level-20").assertExists()
     }
 
     @Test
@@ -42,6 +54,7 @@ class ImpulseLaunchTest {
 
         composeRule.mainClock.advanceTimeBy(12_000)
         composeRule.onNodeWithTag("result").assertExists()
+        composeRule.onNodeWithTag("result-score").assertExists()
 
         composeRule.onNodeWithTag("retry").performClick()
         composeRule.mainClock.advanceTimeByFrame()
