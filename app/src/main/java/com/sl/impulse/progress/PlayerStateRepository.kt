@@ -71,21 +71,18 @@ class PlayerStateRepository(context: Context) {
 
         dataStore.edit { preferences ->
             val scoreKey = scoreKey(levelNumber)
-            val starsKey = starsKey(levelNumber)
-            val update = calculateLevelResultUpdate(
-                currentBestScore = preferences[scoreKey] ?: 0,
-                currentBestStars = preferences[starsKey] ?: 0,
-                highestUnlockedLevel = preferences[HIGHEST_UNLOCKED] ?: 1,
-                levelNumber = levelNumber,
-                score = score,
-                stars = stars,
-                success = success,
-                totalLevels = totalLevels,
-            )
+            if (score > (preferences[scoreKey] ?: 0)) preferences[scoreKey] = score
 
-            update.bestScore?.let { preferences[scoreKey] = it }
-            update.bestStars?.let { preferences[starsKey] = it }
-            update.highestUnlockedLevel?.let { preferences[HIGHEST_UNLOCKED] = it }
+            val starsKey = starsKey(levelNumber)
+            if (stars > (preferences[starsKey] ?: 0)) preferences[starsKey] = stars
+
+            if (success) {
+                val nextLevel = minOf(levelNumber + 1, totalLevels)
+                preferences[HIGHEST_UNLOCKED] = maxOf(
+                    preferences[HIGHEST_UNLOCKED] ?: 1,
+                    nextLevel,
+                )
+            }
         }
     }
 
