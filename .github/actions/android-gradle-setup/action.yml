@@ -28,14 +28,6 @@ runs:
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       with:
-        gradle-version: '9.5.0'
         cache-provider: basic
         cache-read-only: ${{ inputs.gradle-cache-read-only }}
         validate-wrappers: true
-
-    - name: Ensure Gradle wrapper is available
-      shell: bash
-      run: |
-        if [[ ! -f gradle/wrapper/gradle-wrapper.jar ]]; then
-          gradle wrapper --gradle-version 9.5.0 --distribution-type bin
-        fi
