@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Reduced avoidable runtime allocation and repeated work in gameplay simulation and sound playback without changing gameplay behavior.
+- Simplified Android and Gradle configuration by removing unused direct dependencies, redundant buildscript setup, obsolete compatibility defaults, and an obsolete Gradle wrapper bootstrap fallback.
+
+### Removed
+
+- Unused localized chain-result resources, a duplicate round launcher resource, unused Compose test/tooling declarations, and the empty project-specific ProGuard rules file.
+
 ## 0.4.0 - 2026-09-01
 
 ### Added
