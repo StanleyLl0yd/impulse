@@ -30,18 +30,12 @@ internal fun calculateProgressUpdate(
     stars: Int,
     success: Boolean,
     totalLevels: Int,
-): ProgressUpdate {
-    require(levelNumber in 1..totalLevels)
-    require(score >= 0)
-    require(stars in 0..3)
-
-    return ProgressUpdate(
-        highestUnlockedLevel = if (success) {
-            maxOf(currentHighestUnlockedLevel, minOf(levelNumber + 1, totalLevels))
-        } else {
-            currentHighestUnlockedLevel
-        },
-        bestScore = maxOf(currentBestScore, score),
-        bestStars = maxOf(currentBestStars, stars),
-    )
-}
+): ProgressUpdate = ProgressUpdate(
+    highestUnlockedLevel = if (success) {
+        maxOf(currentHighestUnlockedLevel, minOf(levelNumber + 1, totalLevels))
+    } else {
+        currentHighestUnlockedLevel
+    },
+    bestScore = maxOf(currentBestScore, score),
+    bestStars = maxOf(currentBestStars, stars),
+)
