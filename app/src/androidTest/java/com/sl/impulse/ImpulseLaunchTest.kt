@@ -27,13 +27,14 @@ class ImpulseLaunchTest {
         finishSplash()
 
         composeRule.onNodeWithTag("menu-achievements").performClick()
-        composeRule.onNodeWithTag("achievements-screen").assertExists()
+        advanceUntilExists("achievements-screen")
         composeRule.onNodeWithTag("achievements-level").assertExists()
         composeRule.onNodeWithTag("achievements-stars").assertExists()
         composeRule.onNodeWithTag("menu-back").performClick()
+        advanceUntilExists("menu-about")
 
         composeRule.onNodeWithTag("menu-about").performClick()
-        composeRule.onNodeWithTag("about-screen").assertExists()
+        advanceUntilExists("about-screen")
     }
 
     @Test
@@ -50,8 +51,7 @@ class ImpulseLaunchTest {
         enterNewGame()
 
         composeRule.onNodeWithTag("level-button").performClick()
-        composeRule.mainClock.advanceTimeByFrame()
-        composeRule.onNodeWithTag("level-picker").assertExists()
+        advanceUntilExists("level-picker")
         composeRule.onNodeWithTag("level-1").assertExists()
         composeRule.onNodeWithTag("level-20").assertExists()
     }
@@ -61,8 +61,7 @@ class ImpulseLaunchTest {
         enterNewGame()
 
         composeRule.onNodeWithTag("settings-button").performClick()
-        composeRule.mainClock.advanceTimeByFrame()
-        composeRule.onNodeWithTag("settings-panel").assertExists()
+        advanceUntilExists("settings-panel")
         composeRule.onNodeWithTag("sound-toggle").assertExists()
         composeRule.onNodeWithTag("haptics-toggle").assertExists()
         composeRule.onNodeWithTag("reduced-effects-toggle").assertExists()
@@ -88,12 +87,26 @@ class ImpulseLaunchTest {
     private fun enterNewGame() {
         finishSplash()
         composeRule.onNodeWithTag("menu-new-game").performClick()
-        composeRule.mainClock.advanceTimeByFrame()
+        advanceUntilExists("game-canvas")
     }
 
     private fun finishSplash() {
         composeRule.mainClock.autoAdvance = false
         composeRule.mainClock.advanceTimeBy(5_100)
         composeRule.mainClock.advanceTimeByFrame()
+    }
+
+    private fun advanceUntilExists(tag: String) {
+        repeat(120) {
+            composeRule.mainClock.advanceTimeByFrame()
+            if (runCatching {
+                    composeRule.onNodeWithTag(tag).assertExists()
+                }.isSuccess
+            ) {
+                return
+            }
+            Thread.sleep(10)
+        }
+        composeRule.onNodeWithTag(tag).assertExists()
     }
 }
