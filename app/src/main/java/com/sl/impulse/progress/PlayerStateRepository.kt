@@ -32,8 +32,7 @@ class PlayerStateRepository(context: Context) {
         }
         .map { preferences ->
             val highestUnlocked = (preferences[HIGHEST_UNLOCKED] ?: 1).coerceIn(1, totalLevels)
-            val selectedLevel = (preferences[SELECTED_LEVEL] ?: highestUnlocked)
-                .coerceIn(1, highestUnlocked)
+            val selectedLevel = (preferences[SELECTED_LEVEL] ?: highestUnlocked).coerceIn(1, totalLevels)
             val scores = buildMap {
                 for (level in 1..totalLevels) {
                     val score = preferences[scoreKey(level)] ?: 0

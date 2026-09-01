@@ -4,6 +4,12 @@
     <string name="chain_result">CHAIN %1$d</string>
     <string name="chain_depth">Depth %1$d</string>
     <string name="retry">Again</string>
+    <string name="next_level">Next level</string>
+    <string name="level_short">LEVEL %1$d</string>
+    <string name="level_picker_title">LEVELS</string>
+    <string name="total_stars">%1$d / %2$d STARS</string>
+    <string name="score_result">SCORE %1$d</string>
+    <string name="best_score">BEST %1$d</string>
     <string name="settings_short">FX</string>
     <string name="settings_title">Game feel</string>
     <string name="settings_sound">Sound</string>
