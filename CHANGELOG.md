@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.4.0 - 2026-09-01
+
+### Added
+
+- Twenty deterministic data-driven campaign levels with increasing particle counts and completion targets.
+- Per-level scoring, one-to-three-star results, best-score tracking, total-star progress, and locked/unlocked level selection.
+- Local AndroidX DataStore persistence for campaign progress, selected level, best results, sound, haptics, and reduced-effects settings.
+- Next-level navigation after successful attempts and deterministic same-level retry.
+- Unit coverage for the level catalog, scoring, star thresholds, and progression rules plus Android runtime coverage for the campaign picker.
+
+### Changed
+
+- The prototype now opens into a persistent 20-level campaign loop instead of a single rerolled challenge.
+- Game Feel settings persist across app restarts.
+- Result UX now includes score, stars on successful attempts, retry, and next-level actions.
+- Android version is now 0.4.0 with `versionCode 5`.
+
 ## 0.3.1 - 2026-08-31
 
 ### Added
