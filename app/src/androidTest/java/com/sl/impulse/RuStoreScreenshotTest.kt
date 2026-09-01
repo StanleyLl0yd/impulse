@@ -42,7 +42,7 @@ class RuStoreScreenshotTest {
         capture("03-reaction-0600")
         composeRule.mainClock.advanceTimeBy(500)
         capture("04-reaction-1100")
-        composeRule.mainClock.advanceTimeBy(700)
+        composeRule.mainClock.advanceTimeBy(10_000)
 
         composeRule.onNodeWithTag("result").assertExists()
         capture("05-result-success")
