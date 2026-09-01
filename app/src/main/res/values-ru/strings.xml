@@ -1,5 +1,19 @@
 <resources>
     <string name="app_name">IMPULSE</string>
+    <string name="menu_tagline">ОДНО КАСАНИЕ. ОДИН ИМПУЛЬС. МАКСИМАЛЬНАЯ ЦЕПЬ.</string>
+    <string name="menu_continue">Продолжить</string>
+    <string name="menu_new_game">Новая игра</string>
+    <string name="menu_achievements">Достижения</string>
+    <string name="menu_progress_summary">УРОВЕНЬ %1$d / %2$d</string>
+    <string name="menu_about">Об игре</string>
+    <string name="menu_exit">Выход</string>
+    <string name="achievements_title">ДОСТИЖЕНИЯ</string>
+    <string name="achievements_level">Достигнут уровень %1$d из %2$d</string>
+    <string name="achievements_stars">Получено звёзд: %1$d / %2$d</string>
+    <string name="about_title">ОБ ИГРЕ</string>
+    <string name="about_description">Минималистичная головоломка с цепной реакцией. Одно касание запускает импульс, а выбор момента и точки определяет, насколько далеко пойдёт реакция.</string>
+    <string name="about_copyright">© 2026 Stanley Lloyd. Все права защищены.</string>
+    <string name="back">Назад</string>
     <string name="game_hint">Коснитесь один раз, чтобы запустить цепную реакцию</string>
     <string name="chain_depth">Глубина %1$d</string>
     <string name="retry">Ещё раз</string>
