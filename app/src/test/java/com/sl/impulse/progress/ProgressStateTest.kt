@@ -33,6 +33,24 @@ class ProgressStateTest {
     }
 
     @Test
+    fun successfulFinalLevelDoesNotUnlockPastCampaign() {
+        val result = calculateProgressUpdate(
+            currentHighestUnlockedLevel = 20,
+            currentBestScore = 2500,
+            currentBestStars = 2,
+            levelNumber = 20,
+            score = 3000,
+            stars = 3,
+            success = true,
+            totalLevels = 20,
+        )
+
+        assertEquals(20, result.highestUnlockedLevel)
+        assertEquals(3000, result.bestScore)
+        assertEquals(3, result.bestStars)
+    }
+
+    @Test
     fun failedLevelDoesNotUnlockNext() {
         val result = calculateProgressUpdate(
             currentHighestUnlockedLevel = 4,
