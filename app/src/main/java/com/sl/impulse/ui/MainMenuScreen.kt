@@ -5,11 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,8 +36,8 @@ import com.sl.impulse.R
 import com.sl.impulse.game.LevelCatalog
 import com.sl.impulse.progress.ProgressState
 
-private val MenuBackground = Color(0xFF050814)
-private val MenuPanel = Color(0xFF0B1022)
+private val MenuBackgroundColor = Color(0xFF050814)
+private val MenuPanelColor = Color(0xFF0B1022)
 private val MenuPrimary = Color(0xFF00E5FF)
 private val MenuSecondary = Color(0xFFB25CFF)
 private val MenuText = Color(0xFFB6FCFF)
@@ -42,6 +45,7 @@ private val MenuText = Color(0xFFB6FCFF)
 @Composable
 fun MainMenuScreen(
     progress: ProgressState,
+    onContinue: () -> Unit,
     onNewGame: () -> Unit,
     onAchievements: () -> Unit,
     onAbout: () -> Unit,
@@ -73,10 +77,15 @@ fun MainMenuScreen(
                 )
                 Spacer(modifier = Modifier.height(42.dp))
                 MenuButton(
+                    text = stringResource(R.string.menu_continue),
+                    onClick = onContinue,
+                    testTag = "menu-continue",
+                    primary = true,
+                )
+                MenuButton(
                     text = stringResource(R.string.menu_new_game),
                     onClick = onNewGame,
                     testTag = "menu-new-game",
-                    primary = true,
                 )
                 MenuButton(
                     text = stringResource(R.string.menu_achievements),
@@ -194,7 +203,7 @@ private fun MenuButton(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (primary) MenuPrimary else Color(0xFF15203A),
-            contentColor = if (primary) MenuBackground else Color.White,
+            contentColor = if (primary) MenuBackgroundColor else Color.White,
         ),
         shape = RoundedCornerShape(18.dp),
         modifier = Modifier
@@ -220,10 +229,11 @@ private fun MenuBackground(content: @Composable () -> Unit) {
             .fillMaxSize()
             .background(
                 Brush.radialGradient(
-                    colors = listOf(Color(0xFF0D1731), MenuBackground),
+                    colors = listOf(Color(0xFF0D1731), MenuBackgroundColor),
                     radius = 1_100f,
                 ),
             )
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .testTag("main-menu-background"),
     ) {
         content()
@@ -238,7 +248,7 @@ private fun MenuPanel(
     content: @Composable () -> Unit,
 ) {
     Surface(
-        color = MenuPanel.copy(alpha = 0.97f),
+        color = MenuPanelColor.copy(alpha = 0.97f),
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier
             .padding(horizontal = 24.dp)
@@ -280,9 +290,9 @@ private fun MenuTheme(content: @Composable () -> Unit) {
         colorScheme = darkColorScheme(
             primary = MenuPrimary,
             secondary = MenuSecondary,
-            background = MenuBackground,
-            surface = MenuPanel,
-            onPrimary = MenuBackground,
+            background = MenuBackgroundColor,
+            surface = MenuPanelColor,
+            onPrimary = MenuBackgroundColor,
             onSurface = Color.White,
         ),
         content = content,
