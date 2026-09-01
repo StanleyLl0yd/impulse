@@ -66,6 +66,10 @@ class PlayerStateRepository(context: Context) {
         stars: Int,
         success: Boolean,
     ) {
+        require(levelNumber in 1..totalLevels)
+        require(score >= 0)
+        require(stars in 0..3)
+
         dataStore.edit { preferences ->
             val scoreKey = scoreKey(levelNumber)
             val starsKey = starsKey(levelNumber)
