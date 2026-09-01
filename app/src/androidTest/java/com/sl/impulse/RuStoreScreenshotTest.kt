@@ -1,6 +1,9 @@
 package com.sl.impulse
 
+import android.app.LocaleManager
 import android.graphics.Bitmap
+import android.os.LocaleList
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
@@ -22,6 +25,7 @@ class RuStoreScreenshotTest {
     @Test
     fun captureRuStoreScreens() {
         clearOutput()
+        useRussianLocale()
         finishSplash()
         capture("01-main-menu")
 
@@ -30,7 +34,9 @@ class RuStoreScreenshotTest {
         composeRule.mainClock.advanceTimeBy(300)
         capture("02-gameplay")
 
-        composeRule.onNodeWithTag("game-canvas").performTouchInput { click() }
+        composeRule.onNodeWithTag("game-canvas").performTouchInput {
+            click(Offset(290f, 400f))
+        }
 
         composeRule.mainClock.advanceTimeBy(600)
         capture("03-reaction-0600")
@@ -44,6 +50,7 @@ class RuStoreScreenshotTest {
 
         composeRule.onNodeWithTag("result").assertExists()
         capture("07-result")
+        Thread.sleep(250)
 
         composeRule.activityRule.scenario.onActivity {
             it.onBackPressedDispatcher.onBackPressed()
@@ -54,6 +61,14 @@ class RuStoreScreenshotTest {
         composeRule.onNodeWithTag("menu-achievements").performClick()
         advanceUntilExists("achievements-screen")
         capture("09-achievements")
+    }
+
+    private fun useRussianLocale() {
+        composeRule.activityRule.scenario.onActivity { activity ->
+            activity.getSystemService(LocaleManager::class.java).applicationLocales =
+                LocaleList.forLanguageTags("ru-RU")
+        }
+        Thread.sleep(300)
     }
 
     private fun capture(name: String) {
