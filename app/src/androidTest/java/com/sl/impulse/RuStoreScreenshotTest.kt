@@ -33,10 +33,14 @@ class RuStoreScreenshotTest {
         composeRule.onNodeWithTag("menu-new-game").performClick()
         advanceUntilExists("game-canvas")
         composeRule.mainClock.advanceTimeBy(300)
+
+        val winningTap = findWinningTap()
+        composeRule.onNodeWithTag("retry").performClick()
+        advanceUntilExists("game-canvas")
+        composeRule.mainClock.advanceTimeBy(300)
         capture("02-gameplay")
 
-        tapGameCoordinate(0.18f, 0.84f)
-
+        tapGameCoordinate(winningTap.x, winningTap.y)
         composeRule.mainClock.advanceTimeBy(600)
         capture("03-reaction-0600")
         composeRule.mainClock.advanceTimeBy(500)
@@ -57,6 +61,47 @@ class RuStoreScreenshotTest {
         composeRule.onNodeWithTag("menu-achievements").performClick()
         advanceUntilExists("achievements-screen")
         capture("07-achievements")
+    }
+
+    private fun findWinningTap(): Offset {
+        val preferred = listOf(
+            Offset(0.25f, 0.80f),
+            Offset(0.30f, 0.78f),
+            Offset(0.22f, 0.82f),
+            Offset(0.18f, 0.85f),
+            Offset(0.28f, 0.80f),
+            Offset(0.20f, 0.83f),
+            Offset(0.32f, 0.75f),
+        )
+        val fallback = buildList {
+            for (yIndex in 0..10) {
+                for (xIndex in 0..8) {
+                    add(
+                        Offset(
+                            x = 0.10f + xIndex * 0.04f,
+                            y = 0.62f + yIndex * 0.04f,
+                        ),
+                    )
+                }
+            }
+        }
+
+        for (candidate in preferred + fallback) {
+            tapGameCoordinate(candidate.x, candidate.y)
+            composeRule.mainClock.advanceTimeBy(10_000)
+            composeRule.onNodeWithTag("result").assertExists()
+            if (runCatching {
+                    composeRule.onNodeWithTag("result-stars").assertExists()
+                }.isSuccess
+            ) {
+                return candidate
+            }
+            composeRule.onNodeWithTag("retry").performClick()
+            advanceUntilExists("game-canvas")
+            composeRule.mainClock.advanceTimeBy(300)
+        }
+
+        error("Unable to find a successful deterministic tap for RuStore screenshots")
     }
 
     private fun tapGameCoordinate(gameX: Float, gameY: Float) {
