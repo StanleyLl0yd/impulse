@@ -13,8 +13,32 @@ class ImpulseLaunchTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun gameCanvasIsDisplayed() {
+    fun mainMenuIsDisplayedAfterSplash() {
         finishSplash()
+        composeRule.onNodeWithTag("menu-continue").assertExists()
+        composeRule.onNodeWithTag("menu-new-game").assertExists()
+        composeRule.onNodeWithTag("menu-achievements").assertExists()
+        composeRule.onNodeWithTag("menu-about").assertExists()
+        composeRule.onNodeWithTag("menu-exit").assertExists()
+    }
+
+    @Test
+    fun achievementsAndAboutAreAvailable() {
+        finishSplash()
+
+        composeRule.onNodeWithTag("menu-achievements").performClick()
+        composeRule.onNodeWithTag("achievements-screen").assertExists()
+        composeRule.onNodeWithTag("achievements-level").assertExists()
+        composeRule.onNodeWithTag("achievements-stars").assertExists()
+        composeRule.onNodeWithTag("menu-back").performClick()
+
+        composeRule.onNodeWithTag("menu-about").performClick()
+        composeRule.onNodeWithTag("about-screen").assertExists()
+    }
+
+    @Test
+    fun gameCanvasIsDisplayed() {
+        enterNewGame()
         composeRule.onNodeWithTag("game-canvas").assertExists()
         composeRule.onNodeWithTag("game-hint").assertExists()
         composeRule.onNodeWithTag("level-button").assertExists()
@@ -23,7 +47,7 @@ class ImpulseLaunchTest {
 
     @Test
     fun levelPickerShowsCampaign() {
-        finishSplash()
+        enterNewGame()
 
         composeRule.onNodeWithTag("level-button").performClick()
         composeRule.mainClock.advanceTimeByFrame()
@@ -34,7 +58,7 @@ class ImpulseLaunchTest {
 
     @Test
     fun gameFeelSettingsAreAvailable() {
-        finishSplash()
+        enterNewGame()
 
         composeRule.onNodeWithTag("settings-button").performClick()
         composeRule.mainClock.advanceTimeByFrame()
@@ -46,7 +70,7 @@ class ImpulseLaunchTest {
 
     @Test
     fun tapResultAndRetryFlowWorks() {
-        finishSplash()
+        enterNewGame()
 
         composeRule.onNodeWithTag("game-canvas").performTouchInput { click() }
         composeRule.mainClock.advanceTimeBy(100)
@@ -61,9 +85,15 @@ class ImpulseLaunchTest {
         composeRule.onNodeWithTag("game-hint").assertExists()
     }
 
+    private fun enterNewGame() {
+        finishSplash()
+        composeRule.onNodeWithTag("menu-new-game").performClick()
+        composeRule.mainClock.advanceTimeByFrame()
+    }
+
     private fun finishSplash() {
         composeRule.mainClock.autoAdvance = false
-        composeRule.mainClock.advanceTimeBy(3_100)
+        composeRule.mainClock.advanceTimeBy(5_100)
         composeRule.mainClock.advanceTimeByFrame()
     }
 }
