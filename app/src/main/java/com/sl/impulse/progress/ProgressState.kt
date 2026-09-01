@@ -15,6 +15,31 @@ data class ProgressState(
         get() = bestStars.values.sum()
 }
 
+internal data class LevelResultUpdate(
+    val bestScore: Int? = null,
+    val bestStars: Int? = null,
+    val highestUnlockedLevel: Int? = null,
+)
+
+internal fun calculateLevelResultUpdate(
+    currentBestScore: Int,
+    currentBestStars: Int,
+    highestUnlockedLevel: Int,
+    levelNumber: Int,
+    score: Int,
+    stars: Int,
+    success: Boolean,
+    totalLevels: Int,
+): LevelResultUpdate = LevelResultUpdate(
+    bestScore = score.takeIf { it > currentBestScore },
+    bestStars = stars.takeIf { it > currentBestStars },
+    highestUnlockedLevel = if (success) {
+        maxOf(highestUnlockedLevel, minOf(levelNumber + 1, totalLevels))
+    } else {
+        null
+    },
+)
+
 fun recordLevelResult(
     state: ProgressState,
     levelNumber: Int,
@@ -27,23 +52,20 @@ fun recordLevelResult(
     require(score >= 0)
     require(stars in 0..3)
 
-    val scores = state.bestScores.toMutableMap()
-    val previousScore = scores[levelNumber] ?: 0
-    if (score > previousScore) scores[levelNumber] = score
+    val update = calculateLevelResultUpdate(
+        currentBestScore = state.bestScore(levelNumber),
+        currentBestStars = state.stars(levelNumber),
+        highestUnlockedLevel = state.highestUnlockedLevel,
+        levelNumber = levelNumber,
+        score = score,
+        stars = stars,
+        success = success,
+        totalLevels = totalLevels,
+    )
 
-    val starMap = state.bestStars.toMutableMap()
-    val previousStars = starMap[levelNumber] ?: 0
-    if (stars > previousStars) starMap[levelNumber] = stars
-
-    val unlocked = if (success) {
-        maxOf(state.highestUnlockedLevel, minOf(levelNumber + 1, totalLevels))
-    } else {
-        state.highestUnlockedLevel
-    }
-
-    return ProgressState(
-        highestUnlockedLevel = unlocked,
-        bestScores = scores,
-        bestStars = starMap,
+    return state.copy(
+        highestUnlockedLevel = update.highestUnlockedLevel ?: state.highestUnlockedLevel,
+        bestScores = update.bestScore?.let { state.bestScores + (levelNumber to it) } ?: state.bestScores,
+        bestStars = update.bestStars?.let { state.bestStars + (levelNumber to it) } ?: state.bestStars,
     )
 }
