@@ -1,6 +1,7 @@
 package com.sl.impulse.progress
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
@@ -65,23 +66,27 @@ class PlayerStateRepository(context: Context) {
         stars: Int,
         success: Boolean,
     ) {
-        require(levelNumber in 1..totalLevels)
-        require(score >= 0)
-        require(stars in 0..3)
-
         dataStore.edit { preferences ->
             val scoreKey = scoreKey(levelNumber)
-            if (score > (preferences[scoreKey] ?: 0)) preferences[scoreKey] = score
-
             val starsKey = starsKey(levelNumber)
-            if (stars > (preferences[starsKey] ?: 0)) preferences[starsKey] = stars
+            val currentScore = preferences[scoreKey] ?: 0
+            val currentStars = preferences[starsKey] ?: 0
+            val currentHighestUnlocked = preferences[HIGHEST_UNLOCKED] ?: 1
+            val update = calculateProgressUpdate(
+                currentHighestUnlockedLevel = currentHighestUnlocked,
+                currentBestScore = currentScore,
+                currentBestStars = currentStars,
+                levelNumber = levelNumber,
+                score = score,
+                stars = stars,
+                success = success,
+                totalLevels = totalLevels,
+            )
 
-            if (success) {
-                val nextLevel = minOf(levelNumber + 1, totalLevels)
-                preferences[HIGHEST_UNLOCKED] = maxOf(
-                    preferences[HIGHEST_UNLOCKED] ?: 1,
-                    nextLevel,
-                )
+            if (update.bestScore != currentScore) preferences[scoreKey] = update.bestScore
+            if (update.bestStars != currentStars) preferences[starsKey] = update.bestStars
+            if (update.highestUnlockedLevel != currentHighestUnlocked) {
+                preferences[HIGHEST_UNLOCKED] = update.highestUnlockedLevel
             }
         }
     }
@@ -91,16 +96,14 @@ class PlayerStateRepository(context: Context) {
         dataStore.edit { preferences -> preferences[SELECTED_LEVEL] = levelNumber }
     }
 
-    suspend fun setSoundEnabled(enabled: Boolean) {
-        dataStore.edit { preferences -> preferences[SOUND_ENABLED] = enabled }
-    }
+    suspend fun setSoundEnabled(enabled: Boolean) = setBoolean(SOUND_ENABLED, enabled)
 
-    suspend fun setHapticsEnabled(enabled: Boolean) {
-        dataStore.edit { preferences -> preferences[HAPTICS_ENABLED] = enabled }
-    }
+    suspend fun setHapticsEnabled(enabled: Boolean) = setBoolean(HAPTICS_ENABLED, enabled)
 
-    suspend fun setReducedEffects(enabled: Boolean) {
-        dataStore.edit { preferences -> preferences[REDUCED_EFFECTS] = enabled }
+    suspend fun setReducedEffects(enabled: Boolean) = setBoolean(REDUCED_EFFECTS, enabled)
+
+    private suspend fun setBoolean(key: Preferences.Key<Boolean>, enabled: Boolean) {
+        dataStore.edit { preferences -> preferences[key] = enabled }
     }
 
     private companion object {
