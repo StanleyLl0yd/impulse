@@ -1,0 +1,124 @@
+name: RuStore Screenshots
+
+on:
+  push:
+    branches: [chore/rustore-assets]
+    paths:
+      - app/src/androidTest/java/com/sl/impulse/RuStoreScreenshotTest.kt
+      - .github/workflows/rustore-screenshots.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rustore-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    name: Capture on Android emulator
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Android environment
+        uses: ./.github/actions/android-gradle-setup
+        with:
+          android-packages: platform-tools emulator
+          gradle-cache-read-only: true
+
+      - name: Install Android SDK and system image
+        run: |
+          sdkmanager \
+            "platforms;android-37.0" \
+            "build-tools;37.0.0" \
+            "system-images;android-37.0;google_apis_ps16k;x86_64"
+
+      - name: Configure AVD home
+        run: |
+          mkdir -p "$RUNNER_TEMP/avd"
+          echo "ANDROID_AVD_HOME=$RUNNER_TEMP/avd" >> "$GITHUB_ENV"
+
+      - name: Create emulator
+        run: |
+          echo "no" | avdmanager create avd \
+            --force \
+            --name impulse-rustore \
+            --package "system-images;android-37.0;google_apis_ps16k;x86_64" \
+            --device pixel
+
+      - name: Start emulator
+        run: |
+          sudo chmod 666 /dev/kvm || true
+          nohup "$ANDROID_HOME/emulator/emulator" \
+            -avd impulse-rustore \
+            -no-window \
+            -no-audio \
+            -no-boot-anim \
+            -no-snapshot \
+            -gpu software \
+            > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          timeout 120 adb wait-for-device
+          timeout 240 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == "1" ]]; do sleep 2; done'
+          adb shell wm size 1080x1920
+          adb shell wm density 420
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+
+      - name: Build screenshot APKs
+        run: ./gradlew assembleDebug assembleDebugAndroidTest --stacktrace
+
+      - name: Install app and select Russian locale
+        run: |
+          adb install -r app/build/outputs/apk/debug/app-debug.apk
+          adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          adb shell cmd locale set-app-locales com.sl.impulse --user 0 ru-RU || true
+
+      - name: Capture screenshots
+        run: |
+          set -euo pipefail
+          adb shell am instrument -w -r \
+            -e class com.sl.impulse.RuStoreScreenshotTest \
+            com.sl.impulse.test/androidx.test.runner.AndroidJUnitRunner
+
+          mkdir -p rustore-screenshots
+          adb shell run-as com.sl.impulse ls files/rustore | tr -d '\r' | while read -r name; do
+            test -n "$name"
+            adb exec-out run-as com.sl.impulse cat "files/rustore/$name" > "rustore-screenshots/$name"
+          done
+
+          python - <<'PY'
+          from pathlib import Path
+          import struct
+
+          files = sorted(Path('rustore-screenshots').glob('*.png'))
+          if len(files) < 9:
+              raise SystemExit(f'Expected at least 9 screenshots, found {len(files)}')
+          for path in files:
+              data = path.read_bytes()
+              if data[:8] != b'\x89PNG\r\n\x1a\n':
+                  raise SystemExit(f'Not a PNG: {path}')
+              width, height = struct.unpack('>II', data[16:24])
+              if (width, height) != (1080, 1920):
+                  raise SystemExit(f'Unexpected size {width}x{height}: {path}')
+              print(f'{path}: {width}x{height}')
+          PY
+
+      - name: Upload RuStore screenshots
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: impulse-v0.5.0-rustore-screenshots
+          path: rustore-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Show emulator log on failure
+        if: failure()
+        run: cat "$RUNNER_TEMP/emulator.log" || true
