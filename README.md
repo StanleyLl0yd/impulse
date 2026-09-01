@@ -22,7 +22,7 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **0.4.0** (`versionCode 5`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **0.5.0** (`versionCode 6`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
@@ -41,6 +41,10 @@ The current campaign contains **20 deterministic levels** with increasing partic
 
 - One-touch gameplay with a single impulse per attempt
 - 20 data-driven deterministic levels with increasing targets
+- Five-second branded IMPULSE launch splash followed by a dedicated main menu
+- Main menu actions for Continue, New game, Achievements, About, and Exit
+- Continue opens the highest unlocked level; New game starts at level 1 without deleting progress
+- Achievements summary for the highest unlocked level and total earned stars
 - Level unlocking, next-level flow, and a compact campaign picker
 - Per-level score, 1–3 star evaluation, best-score tracking, and total-star progress
 - Local persistence for progress, selected level, best results, and Game Feel settings through AndroidX DataStore
@@ -53,18 +57,18 @@ The current campaign contains **20 deterministic levels** with increasing partic
 - Sound and haptic feedback for taps, chain activations, success, and failure
 - Persistent controls for sound, haptics, and reduced effects
 - Near-miss messaging and result/retry/next-level UX
-- Cinematic launch from pure black with the IMPULSE artwork fading in over three seconds
 - Russian and English interface resources
 - Portrait-first Android experience
 - No account, backend, analytics, ads, or network permission
 
-The current build now provides a complete local campaign loop: **choose a level, make one impulse, earn a result, persist progress, and continue or improve the same deterministic challenge.**
+The current build now provides a complete local campaign loop: **launch into the menu, continue the highest unlocked level or start again from level 1, make one impulse, earn a result, persist progress, and continue or improve the same deterministic challenge.**
 
 ## 🎮 Game feel
 
 IMPULSE is designed around clarity and escalation rather than visual noise:
 
-- **launch** — the app opens from pure black and reveals the IMPULSE artwork over three seconds;
+- **launch** — the app opens from pure black, reveals the IMPULSE artwork over five seconds, then opens the main menu;
+- **menu** — Continue resumes at the highest unlocked level, while New game starts from level 1 without clearing progress;
 - **campaign** — unlocked levels expose their best star result and the campaign tracks total stars;
 - **idle** — cool cyan particles move quietly across the field;
 - **tap** — one cyan impulse expands from the chosen point;
@@ -75,7 +79,7 @@ The simulation is deterministic and seedable so each level can be reproduced acr
 
 ## 📦 Availability
 
-The latest public build, **IMPULSE 0.4.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.4.0) with signed APK and AAB artifacts plus SHA-256 checksums.
+The latest public build, **IMPULSE 0.5.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.5.0) with signed APK and AAB artifacts plus SHA-256 checksums.
 
 The repository is publicly visible for project transparency and review. **Public visibility does not grant permission to copy, build, modify, execute, redistribute, or otherwise use the source code or assets.** See [LICENSE](LICENSE).
 
@@ -179,7 +183,7 @@ The interface follows the device language through Android resources.
 
 ## 🗺 Roadmap
 
-- **Current:** 20-level deterministic campaign, unlocking, scoring, stars, local persistence, polished visual/audio/haptic game feel, and cinematic launch
+- **Current:** 20-level deterministic campaign, main menu with continue/new-game flow, achievements summary, unlocking, scoring, stars, local persistence, polished visual/audio/haptic game feel, and five-second cinematic launch
 - **Next:** level balancing, tutorial/onboarding, accessibility pass, and richer local statistics
 - **Content:** expand toward roughly 60 handcrafted/generated levels for the first complete release
 - **Later:** endless mode and daily challenge after the core campaign loop is proven
