@@ -88,7 +88,7 @@ class GameEngine(
     private val newlyTriggered = mutableListOf<Particle>()
     private var cachedParticles = emptyList<ParticleSnapshot>()
     private var cachedWaves = emptyList<WaveSnapshot>()
-    private var cachedTriggeredCount = 0
+    private var triggeredCount = 0
     private var accumulator = 0.0
     private var impulseUsed = false
     private var finished = false
@@ -147,7 +147,7 @@ class GameEngine(
         } else {
             (accumulator / FIXED_STEP_SECONDS).coerceIn(0.0, 1.0)
         },
-        triggeredCount = cachedTriggeredCount,
+        triggeredCount = triggeredCount,
         requiredCount = requiredCount,
         impulseUsed = impulseUsed,
         finished = finished,
@@ -164,8 +164,7 @@ class GameEngine(
 
         if (impulseUsed && waves.isEmpty()) {
             finished = true
-            cachedTriggeredCount = particles.count { it.triggered }
-            success = cachedTriggeredCount >= requiredCount
+            success = triggeredCount >= requiredCount
         }
     }
 
@@ -184,18 +183,21 @@ class GameEngine(
             var nextY = particle.position.y + particle.velocity.y * step
             var velocityX = particle.velocity.x
             var velocityY = particle.velocity.y
+            var bounced = false
 
             if (nextX - particle.radius < 0.0 || nextX + particle.radius > field.width) {
                 velocityX = -velocityX
                 nextX = nextX.coerceIn(particle.radius, field.width - particle.radius)
+                bounced = true
             }
             if (nextY - particle.radius < 0.0 || nextY + particle.radius > field.height) {
                 velocityY = -velocityY
                 nextY = nextY.coerceIn(particle.radius, field.height - particle.radius)
+                bounced = true
             }
 
             particle.position = Vec2(nextX, nextY)
-            particle.velocity = Vec2(velocityX, velocityY)
+            if (bounced) particle.velocity = Vec2(velocityX, velocityY)
         }
     }
 
@@ -220,6 +222,7 @@ class GameEngine(
             newlyTriggered += particle
         }
 
+        triggeredCount += newlyTriggered.size
         for (particle in newlyTriggered) {
             waves += Wave(
                 origin = particle.position,
@@ -292,7 +295,6 @@ class GameEngine(
                 chainDepth = wave.chainDepth,
             )
         }
-        cachedTriggeredCount = particles.count { it.triggered }
     }
 
     private fun resetParticles(count: Int) {
