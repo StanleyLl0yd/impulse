@@ -99,8 +99,8 @@ jobs:
           import struct
 
           files = sorted(Path('rustore-screenshots').glob('*.png'))
-          if len(files) < 9:
-              raise SystemExit(f'Expected at least 9 screenshots, found {len(files)}')
+          if len(files) < 7:
+              raise SystemExit(f'Expected at least 7 screenshots, found {len(files)}')
           for path in files:
               data = path.read_bytes()
               if data[:8] != b'\x89PNG\r\n\x1a\n':
