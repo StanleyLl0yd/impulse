@@ -22,34 +22,35 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **0.8.0** (`versionCode 10`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **0.9.0** (`versionCode 11`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
 1. Watch the field.
 2. Tap once to place your only impulse.
 3. Let the wave trigger nearby particles.
-4. Use standard particles, Boosters, delayed Fuses, and fixed Anchors to extend the reaction.
+4. Use Standard particles, Boosters, delayed Fuses, and fixed Anchors to extend the reaction.
 5. Reach the target before the chain dies out.
-6. Improve the same deterministic board for a better score and up to three stars.
+6. Improve deterministic challenges across Campaign, Endless, and Daily Impulse.
 
 > One tap. One impulse. Maximum chain.
 
 ## ✨ Current game
 
 - One-touch gameplay with a single impulse per attempt
-- **60 deterministic campaign levels** grouped into six ten-level chapters
+- **60 deterministic campaign levels** in six ten-level chapters
 - Chapters: **Impulse, Momentum, Boost, Control, Resonance, Chaos**
 - Standard, Booster, Fuse, and Anchor particles with distinct behavior and visual language
-- Contextual onboarding for the core rule and newly introduced gameplay patterns
-- Level unlocking, next-level flow, chapter-aware picker, score, 1–3 stars, and best-result tracking
-- **21 local achievements** grouped into Journey, Mastery, Chain, and Endurance
-- Achievement and statistics screen with chapter completion/perfection progress
-- Local statistics for attempts, wins, success rate, triggered particles, best chain, depth, and score
+- Contextual onboarding and chapter introductions
+- Level unlocking, chapter-aware picker, score, 1–3 stars, and local best-result tracking
+- **Endless mode** with seeded 40-field cycles, no field repeats inside a cycle, escalating targets, and persistent best round/run score
+- **Daily Impulse** derived entirely from the device-local calendar date, with one stable challenge per day and unlimited retries
+- **Share Result** through the native Android Sharesheet with no network permission
+- **25 local achievements** across Journey, Mastery, Chain, Endurance, and Replay
+- Local statistics for campaign and replay attempts, wins, triggered particles, best chain and depth
 - Local persistence through AndroidX DataStore
-- Deterministic same-level retry with fixed-step 60 Hz simulation
-- Layered neon waves, trails, activation flashes, sound, and haptic feedback
-- Persistent controls for sound, haptics, and reduced effects
+- Deterministic fixed-step 60 Hz simulation and instant retries
+- Layered neon waves, trails, activation flashes, sound, haptics, and reduced-effects setting
 - English and Russian interface resources
 - Portrait-first Android experience
 - No account, backend, analytics, ads, cloud dependency, or `INTERNET` permission
@@ -65,20 +66,19 @@ Current source version: **0.8.0** (`versionCode 10`) · Min SDK: **26 (Android 8
 | V · Resonance | 41–50 | Dense coordinated combinations |
 | VI · Chaos | 51–60 | Full-system mastery |
 
-Levels use stable seeds, so retries reproduce the same logical challenge. The campaign is protected by deterministic regression tests, including verified winning openings for levels 21–60.
+Levels use stable seeds, so retries reproduce the same logical challenge. Expanded campaign content is protected by deterministic winning-opening regression tests.
+
+## ♾ Replayability
+
+**Endless** creates a run from the 40 advanced campaign fields. A run seed chooses a permutation that visits all 40 fields before any repeat. After each complete cycle the target tightens, and one failed round ends the run. Best round and best run score are stored locally.
+
+**Daily Impulse** maps the local calendar date to one advanced deterministic field. The challenge stays identical for that date, can be retried without limit, and stores the day's best score and stars plus the number of completed Daily challenges.
+
+Replay result cards can be sent to any compatible app through Android's native Sharesheet. Sharing is user-initiated and does not require IMPULSE itself to have network access.
 
 ## 🎮 Game feel
 
-IMPULSE is designed around clarity and escalation rather than visual noise:
-
-- **launch** — a five-second branded reveal opens into the main menu;
-- **idle** — cool cyan particles move quietly across the field;
-- **tap** — one cyan impulse expands from the chosen point;
-- **Boosters** — pink particles create larger reaction waves;
-- **Fuses** — gold particles delay their wave before expansion;
-- **Anchors** — blue fixed particles act as reliable relay points;
-- **chain** — activation colors and wave feedback make propagation readable;
-- **result** — chain size, target, depth, score, stars, new-best feedback, retry, and next level resolve quickly.
+IMPULSE is designed around clarity and escalation rather than visual noise. Cool cyan idle particles, a single cyan player impulse, pink Boosters, gold Fuses, blue Anchors and neon reaction feedback make propagation readable without changing the deterministic simulation. Results surface chain size, target, depth, score and relevant mode progress immediately.
 
 Rendering can run at the display refresh rate while gameplay remains deterministic through a fixed 60 Hz simulation.
 
@@ -92,13 +92,7 @@ Android 8.0 or newer is required.
 
 ## 🛠️ Development
 
-The following commands are for the copyright owner and explicitly authorized development only.
-
-Requirements:
-
-- JDK 17
-- Android SDK 37
-- Gradle 9.7.1 through the repository Gradle Wrapper
+Requirements: JDK 17, Android SDK 37, and Gradle 9.7.1 through the repository Gradle Wrapper.
 
 ```bash
 ./gradlew testDebugUnitTest lintDebug assembleDebug
@@ -123,28 +117,29 @@ Windows:
 | Android | minSdk 26, targetSdk 37, compileSdk 37 |
 | Application ID / namespace | `com.sl.impulse` |
 
-Gameplay state and simulation remain separate from rendering. Campaign progress, statistics, achievements, and preferences remain local to the device.
+Gameplay state and simulation remain separate from rendering. Campaign and replay progress, statistics, achievements, and preferences remain local to the device.
 
 ## ✅ Quality and security checks
 
-Pull requests and pushes to `main` are automatically checked with unit tests, Android Lint, debug/release assembly, API 37 runtime instrumentation tests, CodeQL, Semgrep, Gitleaks, and scheduled/manual Qodana analysis. Weekly runtime coverage also targets the minimum API 26.
+Pull requests and pushes to `main` are checked with unit tests, Android Lint, debug/release assembly, API 37 runtime instrumentation tests, CodeQL, Semgrep and Gitleaks. Scheduled/manual Qodana and weekly minimum-API runtime coverage complement the required checks.
 
-The protected `main` branch requires the configured verification checks before squash merge. Third-party GitHub Actions are pinned to immutable commit SHAs and workflow permissions follow least privilege.
+The protected `main` branch requires configured verification checks before squash merge. Third-party GitHub Actions are pinned to immutable commit SHAs and workflow permissions follow least privilege.
 
 Security issues should be reported according to [SECURITY.md](SECURITY.md).
 
 ## 🔐 Release integrity
 
-Official releases are tag-driven with `vMAJOR.MINOR.PATCH` tags matching `versionName`. The release workflow validates the source version and required checks, builds with the owner-provided signing identity, verifies APK/AAB signatures and certificate identity, generates SHA-256 checksums and artifact attestations, then publishes the GitHub Release. Signing secrets and keystore material are never stored in the repository.
+Official releases are tag-driven with `vMAJOR.MINOR.PATCH` tags matching `versionName`. The release workflow validates source version and required checks, uses the owner-provided signing identity, verifies APK/AAB signatures and certificate identity, generates SHA-256 checksums and artifact attestations, then publishes the GitHub Release. Signing secrets and keystore material are never stored in the repository.
 
 See [docs/RELEASE.md](docs/RELEASE.md).
 
 ## 🔒 Privacy
 
 - Offline by design; no Android `INTERNET` permission
-- No account, analytics, tracking, or advertising
-- Progress, statistics, achievements, and settings stay on the device
-- No backend or cloud dependency
+- No account, analytics, tracking, advertising, or backend
+- Campaign/replay progress, statistics, achievements, and settings stay on the device
+- Daily Impulse uses only the device-local calendar date
+- Sharing is explicitly initiated through the Android Sharesheet
 - No dangerous Android runtime permissions in the current scope
 
 ## 🌍 Languages
@@ -154,9 +149,8 @@ See [docs/RELEASE.md](docs/RELEASE.md).
 
 ## 🗺 Roadmap
 
-- **0.8.0 · Content:** 60-level campaign, six chapters, full local achievements
-- **0.9.0:** Endless, Daily Impulse, Share Result
-- **1.0.0:** final campaign balance, audiovisual polish, dedicated accessibility pass, regression hardening, production release
+- **0.9.0 · Replayability:** Endless, Daily Impulse, Share Result
+- **1.0.0:** final campaign/replay balance, audiovisual polish, dedicated accessibility pass, regression hardening, production release
 
 The product direction is tracked in [PROJECT.md](PROJECT.md).
 

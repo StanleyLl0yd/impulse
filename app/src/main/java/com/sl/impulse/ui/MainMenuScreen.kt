@@ -45,6 +45,8 @@ fun MainMenuScreen(
     progress: ProgressState,
     onContinue: () -> Unit,
     onNewGame: () -> Unit,
+    onEndless: () -> Unit,
+    onDaily: () -> Unit,
     onAchievements: () -> Unit,
     onAbout: () -> Unit,
     onExit: () -> Unit,
@@ -53,9 +55,7 @@ fun MainMenuScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 28.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 28.dp),
         ) {
             Text(
                 text = stringResource(R.string.app_name),
@@ -72,78 +72,42 @@ fun MainMenuScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 8.dp),
             )
-            Spacer(modifier = Modifier.height(42.dp))
-            MenuButton(
-                text = stringResource(R.string.menu_continue),
-                onClick = onContinue,
-                testTag = "menu-continue",
-                primary = true,
-            )
-            MenuButton(
-                text = stringResource(R.string.menu_new_game),
-                onClick = onNewGame,
-                testTag = "menu-new-game",
-            )
-            MenuButton(
-                text = stringResource(R.string.menu_achievements),
-                onClick = onAchievements,
-                testTag = "menu-achievements",
-            )
+            Spacer(modifier = Modifier.height(28.dp))
+            MenuButton(stringResource(R.string.menu_continue), onContinue, "menu-continue", primary = true)
+            MenuButton(stringResource(R.string.menu_new_game), onNewGame, "menu-new-game")
+            MenuButton(stringResource(R.string.menu_endless), onEndless, "menu-endless")
+            MenuButton(stringResource(R.string.menu_daily), onDaily, "menu-daily")
+            MenuButton(stringResource(R.string.menu_achievements), onAchievements, "menu-achievements")
             Text(
-                text = stringResource(
-                    R.string.menu_progress_summary,
-                    progress.highestUnlockedLevel,
-                    LevelCatalog.levels.size,
-                ),
+                text = stringResource(R.string.menu_progress_summary, progress.highestUnlockedLevel, LevelCatalog.levels.size),
                 color = ParticleCore.copy(alpha = 0.52f),
                 fontSize = 12.sp,
-                modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
+                modifier = Modifier.padding(top = 2.dp, bottom = 6.dp),
             )
-            MenuButton(
-                text = stringResource(R.string.menu_about),
-                onClick = onAbout,
-                testTag = "menu-about",
-            )
+            MenuButton(stringResource(R.string.menu_about), onAbout, "menu-about")
             TextButton(
                 onClick = onExit,
-                modifier = Modifier
-                    .widthIn(max = 320.dp)
-                    .fillMaxWidth()
-                    .testTag("menu-exit"),
+                modifier = Modifier.widthIn(max = 320.dp).fillMaxWidth().testTag("menu-exit"),
             ) {
-                Text(
-                    text = stringResource(R.string.menu_exit),
-                    color = Color.White.copy(alpha = 0.58f),
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Text(stringResource(R.string.menu_exit), color = Color.White.copy(alpha = 0.58f), fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
 
 @Composable
-fun AchievementsScreen(
-    playerState: PlayerState,
-    onBack: () -> Unit,
-) {
+fun AchievementsScreen(playerState: PlayerState, onBack: () -> Unit) {
     val progress = playerState.progress
     val statistics = playerState.statistics
+    val replay = playerState.replay
     val totalLevels = LevelCatalog.levels.size
     val achievements = AchievementCatalog.evaluate(playerState)
 
     MenuBackground {
-        MenuPanel(
-            title = stringResource(R.string.achievements_title),
-            testTag = "achievements-screen",
-            onBack = onBack,
-        ) {
+        MenuPanel(stringResource(R.string.achievements_title), "achievements-screen", onBack) {
             SectionTitle(stringResource(R.string.achievements_progress_section))
             Text(
-                text = stringResource(
-                    R.string.achievements_level,
-                    progress.completedLevels,
-                    totalLevels,
-                ),
+                text = stringResource(R.string.achievements_level, progress.completedLevels, totalLevels),
                 color = Color.White,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
@@ -151,32 +115,20 @@ fun AchievementsScreen(
                 modifier = Modifier.testTag("achievements-level"),
             )
             Text(
-                text = stringResource(
-                    R.string.achievements_stars,
-                    progress.totalStars,
-                    totalLevels * 3,
-                ),
+                text = stringResource(R.string.achievements_stars, progress.totalStars, totalLevels * 3),
                 color = ParticleCore.copy(alpha = 0.82f),
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag("achievements-stars"),
             )
             Text(
-                text = stringResource(
-                    R.string.achievements_perfect_levels,
-                    progress.perfectLevels,
-                    totalLevels,
-                ),
+                text = stringResource(R.string.achievements_perfect_levels, progress.perfectLevels, totalLevels),
                 color = TriggeredCore.copy(alpha = 0.76f),
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = stringResource(
-                    R.string.achievements_unlocked,
-                    achievements.count { it.unlocked },
-                    achievements.size,
-                ),
+                text = stringResource(R.string.achievements_unlocked, achievements.count { it.unlocked }, achievements.size),
                 color = NearMiss.copy(alpha = 0.86f),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -198,45 +150,24 @@ fun AchievementsScreen(
                 )
             }
 
+            SectionTitle(stringResource(R.string.achievements_replay_stats_section))
+            StatRow(stringResource(R.string.statistics_endless_round), replay.endlessBestRound.toString(), "statistics-endless-round")
+            StatRow(stringResource(R.string.statistics_endless_score), replay.endlessBestScore.toString())
+            StatRow(stringResource(R.string.statistics_daily_days), replay.dailyCompletedDays.toString(), "statistics-daily-days")
+
             SectionTitle(stringResource(R.string.achievements_statistics_section))
-            StatRow(
-                label = stringResource(R.string.statistics_attempts),
-                value = statistics.totalAttempts.toString(),
-                testTag = "statistics-attempts",
-            )
-            StatRow(
-                label = stringResource(R.string.statistics_successes),
-                value = statistics.successfulAttempts.toString(),
-            )
-            StatRow(
-                label = stringResource(R.string.statistics_success_rate),
-                value = "${statistics.successRatePercent}%",
-            )
-            StatRow(
-                label = stringResource(R.string.statistics_total_triggered),
-                value = statistics.totalTriggeredParticles.toString(),
-            )
-            StatRow(
-                label = stringResource(R.string.statistics_best_chain),
-                value = statistics.bestTriggeredCount.toString(),
-                testTag = "statistics-best-chain",
-            )
-            StatRow(
-                label = stringResource(R.string.statistics_best_depth),
-                value = statistics.bestChainDepth.toString(),
-            )
-            StatRow(
-                label = stringResource(R.string.statistics_best_score),
-                value = progress.bestOverallScore.toString(),
-            )
+            StatRow(stringResource(R.string.statistics_attempts), statistics.totalAttempts.toString(), "statistics-attempts")
+            StatRow(stringResource(R.string.statistics_successes), statistics.successfulAttempts.toString())
+            StatRow(stringResource(R.string.statistics_success_rate), "${statistics.successRatePercent}%")
+            StatRow(stringResource(R.string.statistics_total_triggered), statistics.totalTriggeredParticles.toString())
+            StatRow(stringResource(R.string.statistics_best_chain), statistics.bestTriggeredCount.toString(), "statistics-best-chain")
+            StatRow(stringResource(R.string.statistics_best_depth), statistics.bestChainDepth.toString())
+            StatRow(stringResource(R.string.statistics_best_score), progress.bestOverallScore.toString())
 
             AchievementGroup.entries.forEach { group ->
                 SectionTitle(stringResource(achievementGroupTitleRes(group)))
                 achievements.filter { it.group == group }.forEach { achievement ->
-                    AchievementRow(
-                        title = stringResource(achievementTitleRes(achievement.id)),
-                        unlocked = achievement.unlocked,
-                    )
+                    AchievementRow(stringResource(achievementTitleRes(achievement.id)), achievement.unlocked)
                 }
             }
         }
@@ -246,11 +177,7 @@ fun AchievementsScreen(
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
     MenuBackground {
-        MenuPanel(
-            title = stringResource(R.string.about_title),
-            testTag = "about-screen",
-            onBack = onBack,
-        ) {
+        MenuPanel(stringResource(R.string.about_title), "about-screen", onBack) {
             Text(
                 text = stringResource(R.string.about_description),
                 color = Color.White.copy(alpha = 0.84f),
@@ -281,37 +208,19 @@ private fun SectionTitle(text: String) {
 }
 
 @Composable
-private fun StatRow(
-    label: String,
-    value: String,
-    testTag: String? = null,
-) {
+private fun StatRow(label: String, value: String, testTag: String? = null) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (testTag == null) Modifier else Modifier.testTag(testTag)),
+        modifier = Modifier.fillMaxWidth().then(if (testTag == null) Modifier else Modifier.testTag(testTag)),
     ) {
-        Text(
-            text = label,
-            color = Color.White.copy(alpha = 0.68f),
-            fontSize = 13.sp,
-        )
-        Text(
-            text = value,
-            color = ParticleCore,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        Text(label, color = Color.White.copy(alpha = 0.68f), fontSize = 13.sp)
+        Text(value, color = ParticleCore, fontSize = 13.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun AchievementRow(
-    title: String,
-    unlocked: Boolean,
-) {
+private fun AchievementRow(title: String, unlocked: Boolean) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -332,12 +241,7 @@ private fun AchievementRow(
 }
 
 @Composable
-private fun MenuButton(
-    text: String,
-    onClick: () -> Unit,
-    testTag: String,
-    primary: Boolean = false,
-) {
+private fun MenuButton(text: String, onClick: () -> Unit, testTag: String, primary: Boolean = false) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
@@ -345,18 +249,9 @@ private fun MenuButton(
             contentColor = if (primary) Background else Color.White,
         ),
         shape = RoundedCornerShape(18.dp),
-        modifier = Modifier
-            .padding(vertical = 5.dp)
-            .widthIn(max = 320.dp)
-            .fillMaxWidth()
-            .testTag(testTag),
+        modifier = Modifier.padding(vertical = 4.dp).widthIn(max = 320.dp).fillMaxWidth().testTag(testTag),
     ) {
-        Text(
-            text = text,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp,
-            modifier = Modifier.padding(vertical = 5.dp),
-        )
+        Text(text, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, modifier = Modifier.padding(vertical = 4.dp))
     }
 }
 
@@ -366,12 +261,7 @@ private fun MenuBackground(content: @Composable () -> Unit) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(Color(0xFF0D1731), Background),
-                    radius = 1_100f,
-                ),
-            )
+            .background(Brush.radialGradient(listOf(Color(0xFF0D1731), Background), radius = 1_100f))
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .testTag("main-menu-background"),
     ) {
@@ -380,46 +270,21 @@ private fun MenuBackground(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun MenuPanel(
-    title: String,
-    testTag: String,
-    onBack: () -> Unit,
-    content: @Composable () -> Unit,
-) {
+private fun MenuPanel(title: String, testTag: String, onBack: () -> Unit, content: @Composable () -> Unit) {
     Surface(
         color = PanelBackground.copy(alpha = 0.97f),
         shape = RoundedCornerShape(28.dp),
-        modifier = Modifier
-            .padding(horizontal = 24.dp, vertical = 18.dp)
-            .widthIn(max = 380.dp)
-            .testTag(testTag),
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp).widthIn(max = 380.dp).testTag(testTag),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier
-                .padding(horizontal = 26.dp, vertical = 24.dp)
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.padding(horizontal = 26.dp, vertical = 24.dp).verticalScroll(rememberScrollState()),
         ) {
-            Text(
-                text = title,
-                color = TriggeredGlow,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp,
-            )
+            Text(title, color = TriggeredGlow, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             content()
-            TextButton(
-                onClick = onBack,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("menu-back"),
-            ) {
-                Text(
-                    text = stringResource(R.string.back),
-                    color = ParticleGlow,
-                    fontWeight = FontWeight.Bold,
-                )
+            TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().testTag("menu-back")) {
+                Text(stringResource(R.string.back), color = ParticleGlow, fontWeight = FontWeight.Bold)
             }
         }
     }

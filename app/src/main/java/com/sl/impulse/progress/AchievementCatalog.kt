@@ -8,6 +8,7 @@ enum class AchievementGroup {
     MASTERY,
     CHAIN,
     ENDURANCE,
+    REPLAY,
 }
 
 enum class AchievementId {
@@ -32,6 +33,10 @@ enum class AchievementId {
     PARTICLE_STORM,
     VETERAN,
     CONSISTENT,
+    DAILY_IMPULSE,
+    DAILY_WEEK,
+    ENDLESS_FIVE,
+    ENDLESS_TEN,
 }
 
 data class AchievementStatus(
@@ -44,6 +49,7 @@ object AchievementCatalog {
     fun evaluate(playerState: PlayerState): List<AchievementStatus> {
         val progress = playerState.progress
         val statistics = playerState.statistics
+        val replay = playerState.replay
         val chapters = LevelCatalog.chapters.associateBy { it.id }
         val totalLevels = LevelCatalog.levels.size
         fun chapterCompleted(id: ChapterId): Boolean = progress.isCompleted(requireNotNull(chapters[id]).levels)
@@ -74,6 +80,10 @@ object AchievementCatalog {
             AchievementStatus(AchievementId.PARTICLE_STORM, AchievementGroup.ENDURANCE, statistics.totalTriggeredParticles >= 1_000),
             AchievementStatus(AchievementId.VETERAN, AchievementGroup.ENDURANCE, statistics.totalAttempts >= 100),
             AchievementStatus(AchievementId.CONSISTENT, AchievementGroup.ENDURANCE, statistics.successfulAttempts >= 50),
+            AchievementStatus(AchievementId.DAILY_IMPULSE, AchievementGroup.REPLAY, replay.dailyCompletedDays >= 1),
+            AchievementStatus(AchievementId.DAILY_WEEK, AchievementGroup.REPLAY, replay.dailyCompletedDays >= 7),
+            AchievementStatus(AchievementId.ENDLESS_FIVE, AchievementGroup.REPLAY, replay.endlessBestRound >= 5),
+            AchievementStatus(AchievementId.ENDLESS_TEN, AchievementGroup.REPLAY, replay.endlessBestRound >= 10),
         )
     }
 }

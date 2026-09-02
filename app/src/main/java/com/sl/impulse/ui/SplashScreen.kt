@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.sl.impulse.R
+import com.sl.impulse.game.ReplayMode
 import com.sl.impulse.progress.PlayerState
 import com.sl.impulse.progress.PlayerStateRepository
 import kotlinx.coroutines.launch
@@ -38,6 +39,8 @@ private enum class RootScreen {
     Achievements,
     About,
     Game,
+    Endless,
+    Daily,
 }
 
 @Composable
@@ -65,27 +68,21 @@ fun ImpulseRoot(onExit: () -> Unit = {}) {
     ImpulseTheme {
         when (screen) {
             RootScreen.Splash -> ImpulseSplash(onFinished = showMenu)
-
             RootScreen.Menu -> MainMenuScreen(
                 progress = playerState.progress,
                 onContinue = { startGame(playerState.progress.highestUnlockedLevel) },
                 onNewGame = { startGame(1) },
+                onEndless = { screenName = RootScreen.Endless.name },
+                onDaily = { screenName = RootScreen.Daily.name },
                 onAchievements = { screenName = RootScreen.Achievements.name },
                 onAbout = { screenName = RootScreen.About.name },
                 onExit = onExit,
             )
-
-            RootScreen.Achievements -> AchievementsScreen(
-                playerState = playerState,
-                onBack = showMenu,
-            )
-
+            RootScreen.Achievements -> AchievementsScreen(playerState = playerState, onBack = showMenu)
             RootScreen.About -> AboutScreen(onBack = showMenu)
-
-            RootScreen.Game -> ImpulseGame(
-                repository = repository,
-                playerState = playerState,
-            )
+            RootScreen.Game -> ImpulseGame(repository = repository, playerState = playerState)
+            RootScreen.Endless -> ReplayGame(ReplayMode.ENDLESS, repository, playerState)
+            RootScreen.Daily -> ReplayGame(ReplayMode.DAILY, repository, playerState)
         }
     }
 }
@@ -97,29 +94,20 @@ private fun ImpulseSplash(onFinished: () -> Unit) {
     LaunchedEffect(Unit) {
         imageAlpha.animateTo(
             targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = SPLASH_FADE_DURATION_MILLIS,
-                easing = LinearEasing,
-            ),
+            animationSpec = tween(durationMillis = SPLASH_FADE_DURATION_MILLIS, easing = LinearEasing),
         )
         withFrameNanos { }
         onFinished()
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .testTag("splash-screen"),
+        modifier = Modifier.fillMaxSize().background(Color.Black).testTag("splash-screen"),
     ) {
         Image(
             painter = painterResource(R.drawable.impulse_splash),
             contentDescription = null,
             contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(imageAlpha.value)
-                .testTag("splash-image"),
+            modifier = Modifier.fillMaxSize().alpha(imageAlpha.value).testTag("splash-image"),
         )
     }
 }

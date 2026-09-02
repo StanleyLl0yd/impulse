@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.9.0 - 2026-09-02
+
+### Added
+
+- Endless mode with deterministic 40-field runs, no repeats inside each 40-round cycle, escalating targets across later cycles, persistent best round, and best run score.
+- Daily Impulse with one deterministic advanced challenge selected from the device-local calendar date and persistent daily best score/stars.
+- Native Android Sharesheet support for replay results without adding network access or storage permissions.
+- Replay statistics and four new local achievements for Daily and Endless milestones.
+- English and Russian replay UI, result sharing text, hints, and achievement content.
+- Unit and API 37 runtime coverage for replay challenge generation, menu navigation, and replay progress surfaces.
+
+### Changed
+
+- Replay attempts contribute to the existing local attempt, success, particle, and chain-depth statistics.
+- Android version is now 0.9.0 with `versionCode 11`.
+
 ## 0.8.0 - 2026-09-02
 
 ### Added

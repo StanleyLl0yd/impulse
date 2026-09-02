@@ -19,6 +19,7 @@ internal fun achievementGroupTitleRes(group: AchievementGroup): Int = when (grou
     AchievementGroup.MASTERY -> R.string.achievements_mastery_section
     AchievementGroup.CHAIN -> R.string.achievements_chain_section
     AchievementGroup.ENDURANCE -> R.string.achievements_endurance_section
+    AchievementGroup.REPLAY -> R.string.achievements_replay_section
 }
 
 internal fun achievementTitleRes(id: AchievementId): Int = when (id) {
@@ -43,4 +44,8 @@ internal fun achievementTitleRes(id: AchievementId): Int = when (id) {
     AchievementId.PARTICLE_STORM -> R.string.achievement_particle_storm
     AchievementId.VETERAN -> R.string.achievement_veteran
     AchievementId.CONSISTENT -> R.string.achievement_consistent
+    AchievementId.DAILY_IMPULSE -> R.string.achievement_daily_impulse
+    AchievementId.DAILY_WEEK -> R.string.achievement_daily_week
+    AchievementId.ENDLESS_FIVE -> R.string.achievement_endless_five
+    AchievementId.ENDLESS_TEN -> R.string.achievement_endless_ten
 }

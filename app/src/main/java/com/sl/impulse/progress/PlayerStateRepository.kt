@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.sl.impulse.game.LevelCatalog
 import java.io.IOException
@@ -15,9 +16,19 @@ import kotlinx.coroutines.flow.map
 
 private val Context.playerDataStore by preferencesDataStore(name = "player_state")
 
+data class ReplayProgress(
+    val endlessBestRound: Int = 0,
+    val endlessBestScore: Int = 0,
+    val dailyEpochDay: Long = Long.MIN_VALUE,
+    val dailyBestScore: Int = 0,
+    val dailyBestStars: Int = 0,
+    val dailyCompletedDays: Int = 0,
+)
+
 data class PlayerState(
     val progress: ProgressState = ProgressState(),
     val statistics: PlayerStatistics = PlayerStatistics(),
+    val replay: ReplayProgress = ReplayProgress(),
     val selectedLevel: Int = 1,
     val soundEnabled: Boolean = true,
     val hapticsEnabled: Boolean = true,
@@ -59,6 +70,7 @@ class PlayerStateRepository(context: Context) {
                     bestStars = stars,
                 ),
                 statistics = statisticsFrom(preferences),
+                replay = replayFrom(preferences),
                 selectedLevel = selectedLevel,
                 soundEnabled = preferences[SOUND_ENABLED] ?: true,
                 hapticsEnabled = preferences[HAPTICS_ENABLED] ?: true,
@@ -110,12 +122,66 @@ class PlayerStateRepository(context: Context) {
             if (progressUpdate.bestScore != currentScore) preferences[levelScoreKey] = progressUpdate.bestScore
             if (progressUpdate.bestStars != currentStars) preferences[levelStarsKey] = progressUpdate.bestStars
             preferences[HIGHEST_UNLOCKED] = progressUpdate.highestUnlockedLevel
+            writeStatistics(preferences, statisticsUpdate)
+        }
+    }
 
-            preferences[TOTAL_ATTEMPTS] = statisticsUpdate.totalAttempts
-            preferences[SUCCESSFUL_ATTEMPTS] = statisticsUpdate.successfulAttempts
-            preferences[TOTAL_TRIGGERED_PARTICLES] = statisticsUpdate.totalTriggeredParticles
-            preferences[BEST_TRIGGERED_COUNT] = statisticsUpdate.bestTriggeredCount
-            preferences[BEST_CHAIN_DEPTH] = statisticsUpdate.bestChainDepth
+    suspend fun recordEndlessResult(
+        completedRounds: Int,
+        runScore: Int,
+        triggeredCount: Int,
+        maximumChainDepth: Int,
+        success: Boolean,
+    ) {
+        require(completedRounds >= 0)
+        require(runScore >= 0)
+        require(triggeredCount >= 0)
+        require(maximumChainDepth >= 0)
+        dataStore.edit { preferences ->
+            preferences[ENDLESS_BEST_ROUND] = maxOf(preferences[ENDLESS_BEST_ROUND] ?: 0, completedRounds)
+            preferences[ENDLESS_BEST_SCORE] = maxOf(preferences[ENDLESS_BEST_SCORE] ?: 0, runScore)
+            writeStatistics(
+                preferences,
+                calculateStatisticsUpdate(
+                    current = statisticsFrom(preferences),
+                    triggeredCount = triggeredCount,
+                    maximumChainDepth = maximumChainDepth,
+                    success = success,
+                ),
+            )
+        }
+    }
+
+    suspend fun recordDailyResult(
+        epochDay: Long,
+        score: Int,
+        stars: Int,
+        success: Boolean,
+        triggeredCount: Int,
+        maximumChainDepth: Int,
+    ) {
+        require(score >= 0)
+        require(stars in 0..3)
+        require(triggeredCount >= 0)
+        require(maximumChainDepth >= 0)
+        dataStore.edit { preferences ->
+            val sameDay = preferences[DAILY_EPOCH_DAY] == epochDay
+            preferences[DAILY_EPOCH_DAY] = epochDay
+            preferences[DAILY_BEST_SCORE] = if (sameDay) maxOf(preferences[DAILY_BEST_SCORE] ?: 0, score) else score
+            preferences[DAILY_BEST_STARS] = if (sameDay) maxOf(preferences[DAILY_BEST_STARS] ?: 0, stars) else stars
+            if (success && preferences[DAILY_LAST_COMPLETED_DAY] != epochDay) {
+                preferences[DAILY_COMPLETED_DAYS] = (preferences[DAILY_COMPLETED_DAYS] ?: 0) + 1
+                preferences[DAILY_LAST_COMPLETED_DAY] = epochDay
+            }
+            writeStatistics(
+                preferences,
+                calculateStatisticsUpdate(
+                    current = statisticsFrom(preferences),
+                    triggeredCount = triggeredCount,
+                    maximumChainDepth = maximumChainDepth,
+                    success = success,
+                ),
+            )
         }
     }
 
@@ -125,9 +191,7 @@ class PlayerStateRepository(context: Context) {
     }
 
     suspend fun setSoundEnabled(enabled: Boolean) = setBoolean(SOUND_ENABLED, enabled)
-
     suspend fun setHapticsEnabled(enabled: Boolean) = setBoolean(HAPTICS_ENABLED, enabled)
-
     suspend fun setReducedEffects(enabled: Boolean) = setBoolean(REDUCED_EFFECTS, enabled)
 
     private suspend fun setBoolean(key: Preferences.Key<Boolean>, enabled: Boolean) {
@@ -147,6 +211,23 @@ class PlayerStateRepository(context: Context) {
         bestChainDepth = (preferences[BEST_CHAIN_DEPTH] ?: 0).coerceAtLeast(0),
     )
 
+    private fun replayFrom(preferences: Preferences): ReplayProgress = ReplayProgress(
+        endlessBestRound = (preferences[ENDLESS_BEST_ROUND] ?: 0).coerceAtLeast(0),
+        endlessBestScore = (preferences[ENDLESS_BEST_SCORE] ?: 0).coerceAtLeast(0),
+        dailyEpochDay = preferences[DAILY_EPOCH_DAY] ?: Long.MIN_VALUE,
+        dailyBestScore = (preferences[DAILY_BEST_SCORE] ?: 0).coerceAtLeast(0),
+        dailyBestStars = (preferences[DAILY_BEST_STARS] ?: 0).coerceIn(0, 3),
+        dailyCompletedDays = (preferences[DAILY_COMPLETED_DAYS] ?: 0).coerceAtLeast(0),
+    )
+
+    private fun writeStatistics(preferences: androidx.datastore.preferences.core.MutablePreferences, value: PlayerStatistics) {
+        preferences[TOTAL_ATTEMPTS] = value.totalAttempts
+        preferences[SUCCESSFUL_ATTEMPTS] = value.successfulAttempts
+        preferences[TOTAL_TRIGGERED_PARTICLES] = value.totalTriggeredParticles
+        preferences[BEST_TRIGGERED_COUNT] = value.bestTriggeredCount
+        preferences[BEST_CHAIN_DEPTH] = value.bestChainDepth
+    }
+
     private companion object {
         val PREVIOUS_FINAL_LEVELS = setOf(20, 40)
 
@@ -160,6 +241,13 @@ class PlayerStateRepository(context: Context) {
         val TOTAL_TRIGGERED_PARTICLES = intPreferencesKey("total_triggered_particles")
         val BEST_TRIGGERED_COUNT = intPreferencesKey("best_triggered_count")
         val BEST_CHAIN_DEPTH = intPreferencesKey("best_chain_depth")
+        val ENDLESS_BEST_ROUND = intPreferencesKey("endless_best_round")
+        val ENDLESS_BEST_SCORE = intPreferencesKey("endless_best_score")
+        val DAILY_EPOCH_DAY = longPreferencesKey("daily_epoch_day")
+        val DAILY_BEST_SCORE = intPreferencesKey("daily_best_score")
+        val DAILY_BEST_STARS = intPreferencesKey("daily_best_stars")
+        val DAILY_COMPLETED_DAYS = intPreferencesKey("daily_completed_days")
+        val DAILY_LAST_COMPLETED_DAY = longPreferencesKey("daily_last_completed_day")
 
         fun scoreKey(levelNumber: Int) = intPreferencesKey("best_score_$levelNumber")
         fun starsKey(levelNumber: Int) = intPreferencesKey("best_stars_$levelNumber")
