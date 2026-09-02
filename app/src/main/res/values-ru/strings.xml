@@ -104,11 +104,12 @@
     <string name="score_result">СЧЁТ %1$d</string>
     <string name="best_score">РЕКОРД %1$d</string>
     <string name="settings_short">FX</string>
-    <string name="settings_title">Ощущение игры</string>
+    <string name="settings_title">Ощущение игры и доступность</string>
     <string name="settings_sound">Звук</string>
     <string name="settings_music">Музыка</string>
     <string name="settings_haptics">Виброотклик</string>
     <string name="settings_reduced_effects">Меньше эффектов</string>
+    <string name="settings_high_contrast">Высокий контраст</string>
     <string name="result_success_title">ЦЕПЬ ЗАВЕРШЕНА</string>
     <string name="result_success_detail">Импульс достиг глубины %1$d</string>
     <string name="result_near_miss_title">СОВСЕМ РЯДОМ</string>
