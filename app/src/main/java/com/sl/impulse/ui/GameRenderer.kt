@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import com.sl.impulse.game.GameSnapshot
 import com.sl.impulse.game.ParticleSnapshot
+import com.sl.impulse.game.ParticleType
 import com.sl.impulse.game.Vec2
 import kotlin.math.PI
 import kotlin.math.cos
@@ -55,9 +56,9 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
                 snapshot.interpolationAlpha,
             ).toFloat() * viewport.scale
             val maximumRadius = wave.maximumRadius.toFloat() * viewport.scale
-            val progress = (radius / maximumRadius).coerceIn(0f, 1f)
+            val progress = if (maximumRadius > 0f) (radius / maximumRadius).coerceIn(0f, 1f) else 0f
             val fade = 1f - progress
-            val color = if (wave.chainDepth == 0) ParticleGlow else TriggeredGlow
+            val color = waveColor(wave.sourceType)
             val center = Offset(
                 viewport.left + wave.origin.x.toFloat() * viewport.scale,
                 viewport.top + wave.origin.y.toFloat() * viewport.scale,
@@ -92,10 +93,10 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
                 viewport.top + position.y.toFloat() * viewport.scale,
             )
             val radius = particle.radius.toFloat() * viewport.scale
-            val glow = if (particle.triggered) TriggeredGlow else ParticleGlow
-            val core = if (particle.triggered) TriggeredCore else ParticleCore
+            val glow = particleGlow(particle)
+            val core = particleCore(particle)
 
-            if (!reducedEffects && !particle.triggered) {
+            if (!reducedEffects && !particle.triggered && particle.type != ParticleType.ANCHOR) {
                 val previousCenter = Offset(
                     viewport.left + particle.previousPosition.x.toFloat() * viewport.scale,
                     viewport.top + particle.previousPosition.y.toFloat() * viewport.scale,
@@ -117,18 +118,29 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
                 drawCircle(glow.copy(alpha = 0.14f), radius * 1.8f, center)
             }
 
+            drawParticleMarker(particle, center, radius, glow, core, reducedEffects)
+
             if (particle.triggered) {
                 val burstLife = (
                     1f - particle.triggeredAgeSeconds.toFloat() / BURST_DURATION_SECONDS
                 ).coerceIn(0f, 1f)
                 val pulse = 1f + burstLife * 0.34f
                 drawCircle(core, radius * pulse, center)
+                if (particle.reactionPending) {
+                    drawCircle(
+                        color = FuseGlow.copy(alpha = 0.9f),
+                        radius = radius * 1.85f,
+                        center = center,
+                        style = Stroke(width = (radius * 0.34f).coerceAtLeast(1.2f)),
+                    )
+                }
                 if (!reducedEffects && burstLife > 0f) {
                     drawActivationBurst(
                         center = center,
                         radius = radius,
                         life = burstLife,
                         chainDepth = particle.chainDepth,
+                        color = core,
                     )
                 }
             } else {
@@ -139,11 +151,107 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
     }
 }
 
+private fun DrawScope.drawParticleMarker(
+    particle: ParticleSnapshot,
+    center: Offset,
+    radius: Float,
+    glow: Color,
+    core: Color,
+    reducedEffects: Boolean,
+) {
+    if (particle.triggered) return
+
+    val markerWidth = (radius * 0.24f).coerceAtLeast(1f)
+    when (particle.type) {
+        ParticleType.STANDARD -> Unit
+        ParticleType.BOOSTER -> {
+            drawCircle(
+                color = BoosterGlow.copy(alpha = if (reducedEffects) 0.65f else 0.9f),
+                radius = radius * 1.65f,
+                center = center,
+                style = Stroke(width = markerWidth),
+            )
+        }
+        ParticleType.FUSE -> {
+            drawCircle(
+                color = FuseGlow.copy(alpha = if (reducedEffects) 0.68f else 0.94f),
+                radius = radius * 1.55f,
+                center = center,
+                style = Stroke(width = markerWidth),
+            )
+            drawCircle(
+                color = Background.copy(alpha = 0.82f),
+                radius = radius * 0.27f,
+                center = center,
+            )
+        }
+        ParticleType.ANCHOR -> {
+            val reach = radius * 1.8f
+            val gap = radius * 1.18f
+            drawCircle(
+                color = glow.copy(alpha = 0.86f),
+                radius = radius * 1.5f,
+                center = center,
+                style = Stroke(width = markerWidth),
+            )
+            drawLine(glow, center + Offset(-reach, 0f), center + Offset(-gap, 0f), markerWidth)
+            drawLine(glow, center + Offset(reach, 0f), center + Offset(gap, 0f), markerWidth)
+            drawLine(glow, center + Offset(0f, -reach), center + Offset(0f, -gap), markerWidth)
+            drawLine(glow, center + Offset(0f, reach), center + Offset(0f, gap), markerWidth)
+        }
+    }
+
+    if (particle.type != ParticleType.STANDARD) {
+        drawCircle(core.copy(alpha = 0.22f), radius * 1.2f, center, style = Stroke(markerWidth))
+    }
+}
+
+private fun waveColor(sourceType: ParticleType?): Color = when (sourceType) {
+    null -> ParticleGlow
+    ParticleType.STANDARD -> TriggeredGlow
+    ParticleType.BOOSTER -> BoosterGlow
+    ParticleType.FUSE -> FuseGlow
+    ParticleType.ANCHOR -> AnchorGlow
+}
+
+private fun particleGlow(particle: ParticleSnapshot): Color = if (particle.triggered) {
+    when (particle.type) {
+        ParticleType.STANDARD -> TriggeredGlow
+        ParticleType.BOOSTER -> BoosterGlow
+        ParticleType.FUSE -> FuseGlow
+        ParticleType.ANCHOR -> AnchorGlow
+    }
+} else {
+    when (particle.type) {
+        ParticleType.STANDARD -> ParticleGlow
+        ParticleType.BOOSTER -> BoosterGlow
+        ParticleType.FUSE -> FuseGlow
+        ParticleType.ANCHOR -> AnchorGlow
+    }
+}
+
+private fun particleCore(particle: ParticleSnapshot): Color = if (particle.triggered) {
+    when (particle.type) {
+        ParticleType.STANDARD -> TriggeredCore
+        ParticleType.BOOSTER -> BoosterCore
+        ParticleType.FUSE -> FuseCore
+        ParticleType.ANCHOR -> AnchorCore
+    }
+} else {
+    when (particle.type) {
+        ParticleType.STANDARD -> ParticleCore
+        ParticleType.BOOSTER -> BoosterCore
+        ParticleType.FUSE -> FuseCore
+        ParticleType.ANCHOR -> AnchorCore
+    }
+}
+
 private fun DrawScope.drawActivationBurst(
     center: Offset,
     radius: Float,
     life: Float,
     chainDepth: Int,
+    color: Color,
 ) {
     val rayCount = 6
     val distance = radius * (2.2f + (1f - life) * 3.2f)
@@ -156,7 +264,7 @@ private fun DrawScope.drawActivationBurst(
         val start = center + direction * distance
         val end = start + direction * length
         drawLine(
-            color = TriggeredCore.copy(alpha = life * 0.72f),
+            color = color.copy(alpha = life * 0.72f),
             start = start,
             end = end,
             strokeWidth = (radius * 0.28f).coerceAtLeast(1f),
