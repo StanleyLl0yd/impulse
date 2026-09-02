@@ -123,6 +123,53 @@ class GameEngineTest {
     }
 
     @Test
+    fun expandedCampaignHasKnownWinningOpening() {
+        val openings = mapOf(
+            21 to (5 to 2),
+            22 to (1 to 1),
+            23 to (3 to 8),
+            24 to (5 to 6),
+            25 to (3 to 7),
+            26 to (2 to 8),
+            27 to (7 to 3),
+            28 to (5 to 4),
+            29 to (1 to 5),
+            30 to (6 to 6),
+            31 to (3 to 4),
+            32 to (3 to 7),
+            33 to (2 to 3),
+            34 to (2 to 3),
+            35 to (3 to 11),
+            36 to (1 to 4),
+            37 to (3 to 9),
+            38 to (1 to 6),
+            39 to (1 to 10),
+            40 to (4 to 2),
+        )
+
+        for ((levelNumber, grid) in openings) {
+            val level = LevelCatalog.get(levelNumber)
+            val engine = GameEngine(
+                seed = level.seed,
+                particleCount = level.particleCount,
+                requiredCount = level.requiredCount,
+                particleMix = level.particleMix,
+            )
+            val tap = Vec2(
+                x = grid.first / 8.0,
+                y = GameField.DEFAULT.height * grid.second / 13.0,
+            )
+
+            assertTrue(engine.tap(tap))
+            advanceUntilFinished(engine)
+            assertTrue(
+                "Level $levelNumber should have a verified winning opening",
+                engine.snapshot().success,
+            )
+        }
+    }
+
+    @Test
     fun tapFarFromOnlyParticleFails() {
         val engine = GameEngine(seed = 11L, particleCount = 1, requiredCount = 1)
         val snapshot = engine.snapshot()
