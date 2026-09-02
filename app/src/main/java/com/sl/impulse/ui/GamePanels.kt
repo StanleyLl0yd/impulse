@@ -216,8 +216,16 @@ internal fun GameHint(
         level.number == 3 && progress.highestUnlockedLevel == 3 -> R.string.tutorial_level_3
         else -> null
     }
+    val mechanicText = when {
+        level.number == 21 && progress.highestUnlockedLevel == 21 -> R.string.mechanic_booster
+        level.number == 26 && progress.highestUnlockedLevel == 26 -> R.string.mechanic_fuse
+        level.number == 31 && progress.highestUnlockedLevel == 31 -> R.string.mechanic_anchor
+        level.number == 36 && progress.highestUnlockedLevel == 36 -> R.string.mechanic_mix
+        else -> null
+    }
+    val hintText = tutorialText ?: mechanicText
 
-    if (tutorialText == null) {
+    if (hintText == null) {
         Text(
             text = stringResource(R.string.game_hint),
             color = Color.White.copy(alpha = 0.62f),
@@ -238,14 +246,16 @@ internal fun GameHint(
                 modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.tutorial_title),
-                    color = ParticleGlow,
+                    text = stringResource(
+                        if (tutorialText != null) R.string.tutorial_title else R.string.mechanic_title,
+                    ),
+                    color = if (tutorialText != null) ParticleGlow else TriggeredGlow,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.5.sp,
                 )
                 Text(
-                    text = stringResource(tutorialText),
+                    text = stringResource(hintText),
                     color = Color.White.copy(alpha = 0.84f),
                     fontSize = 13.sp,
                 )
