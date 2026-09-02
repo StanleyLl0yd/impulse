@@ -11,6 +11,7 @@ import java.util.Collections
 class GameSoundController(context: Context) {
     private val handler = Handler(Looper.getMainLooper())
     private val loaded = Collections.synchronizedSet(mutableSetOf<Int>())
+    private val ambient = AdaptiveAmbientMusic(context)
     private var released = false
     private val soundPool = SoundPool.Builder()
         .setMaxStreams(6)
@@ -33,16 +34,19 @@ class GameSoundController(context: Context) {
     private val failure = soundPool.load(context, R.raw.sound_failure, 1)
 
     fun playImpulse() {
+        ambient.settle()
         play(impulse, 0.52f)
     }
 
     fun playChain(chainDepth: Int, triggeredDelta: Int) {
+        ambient.react(chainDepth)
         val rate = 0.92f + minOf(chainDepth, 8) * 0.045f
         val volume = (0.24f + minOf(triggeredDelta, 5) * 0.03f).coerceAtMost(0.38f)
         play(chain, volume, rate)
     }
 
     fun playResult(successful: Boolean) {
+        ambient.settle()
         if (successful) {
             play(success, 0.48f)
         } else {
@@ -55,6 +59,7 @@ class GameSoundController(context: Context) {
         handler.removeCallbacksAndMessages(null)
         soundPool.release()
         loaded.clear()
+        ambient.release()
     }
 
     private fun play(sampleId: Int, volume: Float, rate: Float = 1.0f, attempt: Int = 0) {
