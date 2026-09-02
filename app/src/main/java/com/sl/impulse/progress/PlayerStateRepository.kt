@@ -17,6 +17,7 @@ private val Context.playerDataStore by preferencesDataStore(name = "player_state
 
 data class PlayerState(
     val progress: ProgressState = ProgressState(),
+    val statistics: PlayerStatistics = PlayerStatistics(),
     val selectedLevel: Int = 1,
     val soundEnabled: Boolean = true,
     val hapticsEnabled: Boolean = true,
@@ -53,6 +54,7 @@ class PlayerStateRepository(context: Context) {
                     bestScores = scores,
                     bestStars = stars,
                 ),
+                statistics = statisticsFrom(preferences),
                 selectedLevel = selectedLevel,
                 soundEnabled = preferences[SOUND_ENABLED] ?: true,
                 hapticsEnabled = preferences[HAPTICS_ENABLED] ?: true,
@@ -65,10 +67,14 @@ class PlayerStateRepository(context: Context) {
         score: Int,
         stars: Int,
         success: Boolean,
+        triggeredCount: Int,
+        maximumChainDepth: Int,
     ) {
         require(levelNumber in 1..totalLevels)
         require(score >= 0)
         require(stars in 0..3)
+        require(triggeredCount in 0..LevelCatalog.get(levelNumber).particleCount)
+        require(maximumChainDepth >= 0)
 
         dataStore.edit { preferences ->
             val scoreKey = scoreKey(levelNumber)
@@ -76,7 +82,7 @@ class PlayerStateRepository(context: Context) {
             val currentScore = preferences[scoreKey] ?: 0
             val currentStars = preferences[starsKey] ?: 0
             val currentHighestUnlocked = preferences[HIGHEST_UNLOCKED] ?: 1
-            val update = calculateProgressUpdate(
+            val progressUpdate = calculateProgressUpdate(
                 currentHighestUnlockedLevel = currentHighestUnlocked,
                 currentBestScore = currentScore,
                 currentBestStars = currentStars,
@@ -86,12 +92,24 @@ class PlayerStateRepository(context: Context) {
                 success = success,
                 totalLevels = totalLevels,
             )
+            val statisticsUpdate = calculateStatisticsUpdate(
+                current = statisticsFrom(preferences),
+                triggeredCount = triggeredCount,
+                maximumChainDepth = maximumChainDepth,
+                success = success,
+            )
 
-            if (update.bestScore != currentScore) preferences[scoreKey] = update.bestScore
-            if (update.bestStars != currentStars) preferences[starsKey] = update.bestStars
-            if (update.highestUnlockedLevel != currentHighestUnlocked) {
-                preferences[HIGHEST_UNLOCKED] = update.highestUnlockedLevel
+            if (progressUpdate.bestScore != currentScore) preferences[scoreKey] = progressUpdate.bestScore
+            if (progressUpdate.bestStars != currentStars) preferences[starsKey] = progressUpdate.bestStars
+            if (progressUpdate.highestUnlockedLevel != currentHighestUnlocked) {
+                preferences[HIGHEST_UNLOCKED] = progressUpdate.highestUnlockedLevel
             }
+
+            preferences[TOTAL_ATTEMPTS] = statisticsUpdate.totalAttempts
+            preferences[SUCCESSFUL_ATTEMPTS] = statisticsUpdate.successfulAttempts
+            preferences[TOTAL_TRIGGERED_PARTICLES] = statisticsUpdate.totalTriggeredParticles
+            preferences[BEST_TRIGGERED_COUNT] = statisticsUpdate.bestTriggeredCount
+            preferences[BEST_CHAIN_DEPTH] = statisticsUpdate.bestChainDepth
         }
     }
 
@@ -110,12 +128,25 @@ class PlayerStateRepository(context: Context) {
         dataStore.edit { preferences -> preferences[key] = enabled }
     }
 
+    private fun statisticsFrom(preferences: Preferences): PlayerStatistics = PlayerStatistics(
+        totalAttempts = (preferences[TOTAL_ATTEMPTS] ?: 0).coerceAtLeast(0),
+        successfulAttempts = (preferences[SUCCESSFUL_ATTEMPTS] ?: 0).coerceAtLeast(0),
+        totalTriggeredParticles = (preferences[TOTAL_TRIGGERED_PARTICLES] ?: 0).coerceAtLeast(0),
+        bestTriggeredCount = (preferences[BEST_TRIGGERED_COUNT] ?: 0).coerceAtLeast(0),
+        bestChainDepth = (preferences[BEST_CHAIN_DEPTH] ?: 0).coerceAtLeast(0),
+    )
+
     private companion object {
         val HIGHEST_UNLOCKED = intPreferencesKey("highest_unlocked_level")
         val SELECTED_LEVEL = intPreferencesKey("selected_level")
         val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
         val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
         val REDUCED_EFFECTS = booleanPreferencesKey("reduced_effects")
+        val TOTAL_ATTEMPTS = intPreferencesKey("total_attempts")
+        val SUCCESSFUL_ATTEMPTS = intPreferencesKey("successful_attempts")
+        val TOTAL_TRIGGERED_PARTICLES = intPreferencesKey("total_triggered_particles")
+        val BEST_TRIGGERED_COUNT = intPreferencesKey("best_triggered_count")
+        val BEST_CHAIN_DEPTH = intPreferencesKey("best_chain_depth")
 
         fun scoreKey(levelNumber: Int) = intPreferencesKey("best_score_$levelNumber")
         fun starsKey(levelNumber: Int) = intPreferencesKey("best_stars_$levelNumber")
