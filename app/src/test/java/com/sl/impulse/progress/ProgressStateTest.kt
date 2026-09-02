@@ -51,6 +51,28 @@ class ProgressStateTest {
     }
 
     @Test
+    fun completedPreviousCampaignUnlocksFirstExpandedLevel() {
+        assertEquals(
+            21,
+            expandedCampaignHighestUnlocked(
+                storedHighestUnlocked = 20,
+                previousFinalLevel = 20,
+                previousFinalStars = 2,
+                totalLevels = 40,
+            ),
+        )
+        assertEquals(
+            20,
+            expandedCampaignHighestUnlocked(
+                storedHighestUnlocked = 20,
+                previousFinalLevel = 20,
+                previousFinalStars = 0,
+                totalLevels = 40,
+            ),
+        )
+    }
+
+    @Test
     fun failedLevelDoesNotUnlockNext() {
         val result = calculateProgressUpdate(
             currentHighestUnlockedLevel = 4,
