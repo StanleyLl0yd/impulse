@@ -30,6 +30,8 @@ class ImpulseLaunchTest {
         advanceUntilExists("achievements-screen")
         composeRule.onNodeWithTag("achievements-level").assertExists()
         composeRule.onNodeWithTag("achievements-stars").assertExists()
+        composeRule.onNodeWithTag("statistics-attempts").assertExists()
+        composeRule.onNodeWithTag("statistics-best-chain").assertExists()
         composeRule.onNodeWithTag("menu-back").performClick()
         advanceUntilExists("menu-about")
 
@@ -77,7 +79,9 @@ class ImpulseLaunchTest {
 
         composeRule.mainClock.advanceTimeBy(12_000)
         composeRule.onNodeWithTag("result").assertExists()
+        composeRule.onNodeWithTag("result-chain").assertExists()
         composeRule.onNodeWithTag("result-score").assertExists()
+        composeRule.onNodeWithTag("result-depth").assertExists()
 
         composeRule.onNodeWithTag("retry").performClick()
         composeRule.mainClock.advanceTimeByFrame()
