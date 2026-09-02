@@ -9,7 +9,9 @@ import android.media.AudioTrack
 import android.os.Bundle
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.PI
 import kotlin.math.max
@@ -20,6 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -28,9 +32,11 @@ private val Context.musicDataStore by preferencesDataStore(name = "music_setting
 internal class MusicPreferences(context: Context) {
     private val dataStore = context.applicationContext.musicDataStore
 
-    val enabled: Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[MUSIC_ENABLED] ?: true
-    }
+    val enabled: Flow<Boolean> = dataStore.data
+        .catch { error ->
+            if (error is IOException) emit(emptyPreferences()) else throw error
+        }
+        .map { preferences -> preferences[MUSIC_ENABLED] ?: true }
 
     suspend fun setEnabled(enabled: Boolean) {
         dataStore.edit { preferences -> preferences[MUSIC_ENABLED] = enabled }
@@ -171,8 +177,7 @@ internal class AdaptiveAmbientMusic(context: Context) {
                 val target = if (active && reactionFresh) intensityTarget else 0f
                 val audible = synth.fill(buffer, active, target)
                 if (!active && !audible) break
-                val written = track.write(buffer, 0, buffer.size, AudioTrack.WRITE_BLOCKING)
-                if (written < 0) break
+                if (track.write(buffer, 0, buffer.size, AudioTrack.WRITE_BLOCKING) < 0) break
             }
         } finally {
             runCatching { track.stop() }
@@ -184,15 +189,6 @@ internal class AdaptiveAmbientMusic(context: Context) {
     private fun clearWorker() {
         synchronized(lock) {
             if (worker === Thread.currentThread()) worker = null
-            if (!disposed.get() && enabled && foreground) ensurePlaybackLocked()
-        }
-    }
-
-    private fun ensurePlaybackLocked() {
-        if (worker?.isAlive == true) return
-        worker = Thread(::runAudio, "impulse-ambient").apply {
-            isDaemon = true
-            start()
         }
     }
 
@@ -211,6 +207,8 @@ internal class AdaptiveAmbientMusic(context: Context) {
         private val baseRightPan = DoubleArray(basePans.size) { panRight(basePans[it]) }
         private val shimmerLeftPan = DoubleArray(shimmerPans.size) { panLeft(shimmerPans[it]) }
         private val shimmerRightPan = DoubleArray(shimmerPans.size) { panRight(shimmerPans[it]) }
+        private val noteMovement = DoubleArray(baseFrequencies.size)
+        private val shimmerMovement = DoubleArray(shimmerFrequencies.size)
         private var sampleIndex = 0L
         private var fade = 0.0
         private var intensity = 0.0
@@ -220,11 +218,13 @@ internal class AdaptiveAmbientMusic(context: Context) {
             val baseMovement = 0.86 +
                 0.08 * sin(2.0 * PI * 0.0125 * seconds) +
                 0.05 * sin(2.0 * PI * 0.0208 * seconds + 1.7)
-            val noteMovement = DoubleArray(baseFrequencies.size) { index ->
-                0.78 + 0.22 * sin(2.0 * PI * (0.0038 + index * 0.0007) * seconds + index * 0.83)
+            baseFrequencies.indices.forEach { index ->
+                noteMovement[index] = 0.78 +
+                    0.22 * sin(2.0 * PI * (0.0038 + index * 0.0007) * seconds + index * 0.83)
             }
-            val shimmerMovement = DoubleArray(shimmerFrequencies.size) { index ->
-                0.58 + 0.42 * sin(2.0 * PI * (0.0052 + index * 0.0009) * seconds + index * 1.11)
+            shimmerFrequencies.indices.forEach { index ->
+                shimmerMovement[index] = 0.58 +
+                    0.42 * sin(2.0 * PI * (0.0052 + index * 0.0009) * seconds + index * 1.11)
             }
             val fadeStep = 1.0 / (SAMPLE_RATE * if (active) 1.4 else 0.7)
             val intensityStep = 1.0 / (SAMPLE_RATE * 0.8)
