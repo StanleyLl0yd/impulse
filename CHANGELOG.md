@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.6.1 - 2026-09-02
+
+### Changed
+
+- Replaced the launcher icon with a new neon chain-reaction emblem that reflects the one-impulse gameplay more directly while remaining legible at launcher sizes.
+- Added an Android 13+ monochrome adaptive-icon layer so IMPULSE supports themed launcher icons without changing the full-color identity on standard launchers.
+- Android version is now 0.6.1 with `versionCode 8`.
+
 ## 0.6.0 - 2026-09-02
 
 ### Added
