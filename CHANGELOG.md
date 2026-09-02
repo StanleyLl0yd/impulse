@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.7.0 - 2026-09-02
+
+### Added
+
+- Three new deterministic gameplay particle types: Booster, Fuse, and Anchor.
+- Booster particles emit a larger, faster reaction wave when triggered.
+- Fuse particles pause briefly before emitting their reaction wave, adding timing to chain propagation without adding another player input.
+- Anchor particles remain stationary, creating reliable relay points inside otherwise moving fields.
+- Twenty new deterministic campaign levels, expanding the campaign from 20 to 40 levels.
+- Progressive in-game mechanic hints on levels 21, 26, 31, and 36 in English and Russian.
+- Distinct visual language for special particles and their waves, including reduced-effects-compatible markers.
+- Unit coverage for special particle behavior, the expanded catalog, and campaign-progress migration.
+
+### Changed
+
+- Levels 21–25 introduce Boosters, 26–30 introduce delayed Fuse behavior, 31–35 introduce Anchors, and 36–40 combine all three mechanics.
+- Players who completed the former 20-level campaign automatically unlock level 21 after updating; existing scores, stars, statistics, and settings are preserved.
+- Android version is now 0.7.0 with `versionCode 9`.
+
 ## 0.6.1 - 2026-09-02
 
 ### Changed
