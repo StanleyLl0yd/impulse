@@ -16,11 +16,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,12 +34,6 @@ import com.sl.impulse.R
 import com.sl.impulse.game.LevelCatalog
 import com.sl.impulse.progress.ProgressState
 
-private val MenuBackgroundColor = Color(0xFF050814)
-private val MenuPanelColor = Color(0xFF0B1022)
-private val MenuPrimary = Color(0xFF00E5FF)
-private val MenuSecondary = Color(0xFFB25CFF)
-private val MenuText = Color(0xFFB6FCFF)
-
 @Composable
 fun MainMenuScreen(
     progress: ProgressState,
@@ -51,75 +43,73 @@ fun MainMenuScreen(
     onAbout: () -> Unit,
     onExit: () -> Unit,
 ) {
-    MenuTheme {
-        MenuBackground {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
+    MenuBackground {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 28.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.app_name),
+                color = Color.White,
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 6.sp,
+            )
+            Text(
+                text = stringResource(R.string.menu_tagline),
+                color = ParticleCore.copy(alpha = 0.62f),
+                fontSize = 12.sp,
+                letterSpacing = 1.4.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Spacer(modifier = Modifier.height(42.dp))
+            MenuButton(
+                text = stringResource(R.string.menu_continue),
+                onClick = onContinue,
+                testTag = "menu-continue",
+                primary = true,
+            )
+            MenuButton(
+                text = stringResource(R.string.menu_new_game),
+                onClick = onNewGame,
+                testTag = "menu-new-game",
+            )
+            MenuButton(
+                text = stringResource(R.string.menu_achievements),
+                onClick = onAchievements,
+                testTag = "menu-achievements",
+            )
+            Text(
+                text = stringResource(
+                    R.string.menu_progress_summary,
+                    progress.highestUnlockedLevel,
+                    LevelCatalog.levels.size,
+                ),
+                color = ParticleCore.copy(alpha = 0.52f),
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
+            )
+            MenuButton(
+                text = stringResource(R.string.menu_about),
+                onClick = onAbout,
+                testTag = "menu-about",
+            )
+            TextButton(
+                onClick = onExit,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 28.dp),
+                    .widthIn(max = 320.dp)
+                    .fillMaxWidth()
+                    .testTag("menu-exit"),
             ) {
                 Text(
-                    text = stringResource(R.string.app_name),
-                    color = Color.White,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 6.sp,
+                    text = stringResource(R.string.menu_exit),
+                    color = Color.White.copy(alpha = 0.58f),
+                    fontWeight = FontWeight.SemiBold,
                 )
-                Text(
-                    text = stringResource(R.string.menu_tagline),
-                    color = MenuText.copy(alpha = 0.62f),
-                    fontSize = 12.sp,
-                    letterSpacing = 1.4.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                Spacer(modifier = Modifier.height(42.dp))
-                MenuButton(
-                    text = stringResource(R.string.menu_continue),
-                    onClick = onContinue,
-                    testTag = "menu-continue",
-                    primary = true,
-                )
-                MenuButton(
-                    text = stringResource(R.string.menu_new_game),
-                    onClick = onNewGame,
-                    testTag = "menu-new-game",
-                )
-                MenuButton(
-                    text = stringResource(R.string.menu_achievements),
-                    onClick = onAchievements,
-                    testTag = "menu-achievements",
-                )
-                Text(
-                    text = stringResource(
-                        R.string.menu_progress_summary,
-                        progress.highestUnlockedLevel,
-                        LevelCatalog.levels.size,
-                    ),
-                    color = MenuText.copy(alpha = 0.52f),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
-                )
-                MenuButton(
-                    text = stringResource(R.string.menu_about),
-                    onClick = onAbout,
-                    testTag = "menu-about",
-                )
-                TextButton(
-                    onClick = onExit,
-                    modifier = Modifier
-                        .widthIn(max = 320.dp)
-                        .fillMaxWidth()
-                        .testTag("menu-exit"),
-                ) {
-                    Text(
-                        text = stringResource(R.string.menu_exit),
-                        color = Color.White.copy(alpha = 0.58f),
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
             }
         }
     }
@@ -130,64 +120,60 @@ fun AchievementsScreen(
     progress: ProgressState,
     onBack: () -> Unit,
 ) {
-    MenuTheme {
-        MenuBackground {
-            MenuPanel(
-                title = stringResource(R.string.achievements_title),
-                testTag = "achievements-screen",
-                onBack = onBack,
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.achievements_level,
-                        progress.highestUnlockedLevel,
-                        LevelCatalog.levels.size,
-                    ),
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.testTag("achievements-level"),
-                )
-                Text(
-                    text = stringResource(
-                        R.string.achievements_stars,
-                        progress.totalStars,
-                        LevelCatalog.levels.size * 3,
-                    ),
-                    color = MenuText.copy(alpha = 0.82f),
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.testTag("achievements-stars"),
-                )
-            }
+    MenuBackground {
+        MenuPanel(
+            title = stringResource(R.string.achievements_title),
+            testTag = "achievements-screen",
+            onBack = onBack,
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.achievements_level,
+                    progress.highestUnlockedLevel,
+                    LevelCatalog.levels.size,
+                ),
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("achievements-level"),
+            )
+            Text(
+                text = stringResource(
+                    R.string.achievements_stars,
+                    progress.totalStars,
+                    LevelCatalog.levels.size * 3,
+                ),
+                color = ParticleCore.copy(alpha = 0.82f),
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("achievements-stars"),
+            )
         }
     }
 }
 
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
-    MenuTheme {
-        MenuBackground {
-            MenuPanel(
-                title = stringResource(R.string.about_title),
-                testTag = "about-screen",
-                onBack = onBack,
-            ) {
-                Text(
-                    text = stringResource(R.string.about_description),
-                    color = Color.White.copy(alpha = 0.84f),
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text = stringResource(R.string.about_copyright),
-                    color = MenuText.copy(alpha = 0.56f),
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                )
-            }
+    MenuBackground {
+        MenuPanel(
+            title = stringResource(R.string.about_title),
+            testTag = "about-screen",
+            onBack = onBack,
+        ) {
+            Text(
+                text = stringResource(R.string.about_description),
+                color = Color.White.copy(alpha = 0.84f),
+                fontSize = 15.sp,
+                lineHeight = 22.sp,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(R.string.about_copyright),
+                color = ParticleCore.copy(alpha = 0.56f),
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
@@ -202,8 +188,8 @@ private fun MenuButton(
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (primary) MenuPrimary else Color(0xFF15203A),
-            contentColor = if (primary) MenuBackgroundColor else Color.White,
+            containerColor = if (primary) ParticleGlow else Color(0xFF15203A),
+            contentColor = if (primary) Background else Color.White,
         ),
         shape = RoundedCornerShape(18.dp),
         modifier = Modifier
@@ -229,7 +215,7 @@ private fun MenuBackground(content: @Composable () -> Unit) {
             .fillMaxSize()
             .background(
                 Brush.radialGradient(
-                    colors = listOf(Color(0xFF0D1731), MenuBackgroundColor),
+                    colors = listOf(Color(0xFF0D1731), Background),
                     radius = 1_100f,
                 ),
             )
@@ -248,7 +234,7 @@ private fun MenuPanel(
     content: @Composable () -> Unit,
 ) {
     Surface(
-        color = MenuPanelColor.copy(alpha = 0.97f),
+        color = PanelBackground.copy(alpha = 0.97f),
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier
             .padding(horizontal = 24.dp)
@@ -262,7 +248,7 @@ private fun MenuPanel(
         ) {
             Text(
                 text = title,
-                color = MenuSecondary,
+                color = TriggeredGlow,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
@@ -276,25 +262,10 @@ private fun MenuPanel(
             ) {
                 Text(
                     text = stringResource(R.string.back),
-                    color = MenuPrimary,
+                    color = ParticleGlow,
                     fontWeight = FontWeight.Bold,
                 )
             }
         }
     }
-}
-
-@Composable
-private fun MenuTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = darkColorScheme(
-            primary = MenuPrimary,
-            secondary = MenuSecondary,
-            background = MenuBackgroundColor,
-            surface = MenuPanelColor,
-            onPrimary = MenuBackgroundColor,
-            onSurface = Color.White,
-        ),
-        content = content,
-    )
 }

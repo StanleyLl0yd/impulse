@@ -15,35 +15,27 @@ data class ProgressState(
         get() = bestStars.values.sum()
 }
 
-fun recordLevelResult(
-    state: ProgressState,
+internal data class ProgressUpdate(
+    val highestUnlockedLevel: Int,
+    val bestScore: Int,
+    val bestStars: Int,
+)
+
+internal fun calculateProgressUpdate(
+    currentHighestUnlockedLevel: Int,
+    currentBestScore: Int,
+    currentBestStars: Int,
     levelNumber: Int,
     score: Int,
     stars: Int,
     success: Boolean,
     totalLevels: Int,
-): ProgressState {
-    require(levelNumber in 1..totalLevels)
-    require(score >= 0)
-    require(stars in 0..3)
-
-    val scores = state.bestScores.toMutableMap()
-    val previousScore = scores[levelNumber] ?: 0
-    if (score > previousScore) scores[levelNumber] = score
-
-    val starMap = state.bestStars.toMutableMap()
-    val previousStars = starMap[levelNumber] ?: 0
-    if (stars > previousStars) starMap[levelNumber] = stars
-
-    val unlocked = if (success) {
-        maxOf(state.highestUnlockedLevel, minOf(levelNumber + 1, totalLevels))
+): ProgressUpdate = ProgressUpdate(
+    highestUnlockedLevel = if (success) {
+        maxOf(currentHighestUnlockedLevel, minOf(levelNumber + 1, totalLevels))
     } else {
-        state.highestUnlockedLevel
-    }
-
-    return ProgressState(
-        highestUnlockedLevel = unlocked,
-        bestScores = scores,
-        bestStars = starMap,
-    )
-}
+        currentHighestUnlockedLevel
+    },
+    bestScore = maxOf(currentBestScore, score),
+    bestStars = maxOf(currentBestStars, stars),
+)

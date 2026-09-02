@@ -1,8 +1,5 @@
 package com.sl.impulse.ui
 
-import android.graphics.BitmapFactory
-import android.graphics.ImageDecoder
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -24,10 +21,10 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import com.sl.impulse.R
 import com.sl.impulse.progress.PlayerState
 import com.sl.impulse.progress.PlayerStateRepository
@@ -53,68 +50,49 @@ fun ImpulseRoot(onExit: () -> Unit = {}) {
     val scope = rememberCoroutineScope()
     var screenName by rememberSaveable { mutableStateOf(RootScreen.Splash.name) }
     val screen = RootScreen.valueOf(screenName)
-
-    BackHandler(enabled = screen == RootScreen.Menu, onBack = onExit)
-    BackHandler(
-        enabled = screen == RootScreen.Achievements ||
-            screen == RootScreen.About ||
-            screen == RootScreen.Game,
-    ) {
-        screenName = RootScreen.Menu.name
+    val showMenu = { screenName = RootScreen.Menu.name }
+    val startGame: (Int) -> Unit = { levelNumber ->
+        scope.launch {
+            repository.selectLevel(levelNumber)
+            screenName = RootScreen.Game.name
+        }
     }
 
-    when (screen) {
-        RootScreen.Splash -> ImpulseSplash(
-            onFinished = { screenName = RootScreen.Menu.name },
-        )
+    BackHandler(enabled = screen != RootScreen.Splash) {
+        if (screen == RootScreen.Menu) onExit() else showMenu()
+    }
 
-        RootScreen.Menu -> MainMenuScreen(
-            progress = playerState.progress,
-            onContinue = {
-                scope.launch {
-                    repository.selectLevel(playerState.progress.highestUnlockedLevel)
-                    screenName = RootScreen.Game.name
-                }
-            },
-            onNewGame = {
-                scope.launch {
-                    repository.selectLevel(1)
-                    screenName = RootScreen.Game.name
-                }
-            },
-            onAchievements = { screenName = RootScreen.Achievements.name },
-            onAbout = { screenName = RootScreen.About.name },
-            onExit = onExit,
-        )
+    ImpulseTheme {
+        when (screen) {
+            RootScreen.Splash -> ImpulseSplash(onFinished = showMenu)
 
-        RootScreen.Achievements -> AchievementsScreen(
-            progress = playerState.progress,
-            onBack = { screenName = RootScreen.Menu.name },
-        )
+            RootScreen.Menu -> MainMenuScreen(
+                progress = playerState.progress,
+                onContinue = { startGame(playerState.progress.highestUnlockedLevel) },
+                onNewGame = { startGame(1) },
+                onAchievements = { screenName = RootScreen.Achievements.name },
+                onAbout = { screenName = RootScreen.About.name },
+                onExit = onExit,
+            )
 
-        RootScreen.About -> AboutScreen(
-            onBack = { screenName = RootScreen.Menu.name },
-        )
+            RootScreen.Achievements -> AchievementsScreen(
+                progress = playerState.progress,
+                onBack = showMenu,
+            )
 
-        RootScreen.Game -> ImpulseApp()
+            RootScreen.About -> AboutScreen(onBack = showMenu)
+
+            RootScreen.Game -> ImpulseGame(
+                repository = repository,
+                playerState = playerState,
+            )
+        }
     }
 }
 
 @Composable
 private fun ImpulseSplash(onFinished: () -> Unit) {
     val imageAlpha = remember { Animatable(0f) }
-    val resources = LocalContext.current.resources
-    val splashBitmap = remember(resources) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            ImageDecoder.decodeBitmap(
-                ImageDecoder.createSource(resources, R.drawable.impulse_splash),
-            ).asImageBitmap()
-        } else {
-            requireNotNull(
-                BitmapFactory.decodeResource(resources, R.drawable.impulse_splash),
-            ).asImageBitmap()
-        }
-    }
 
     LaunchedEffect(Unit) {
         imageAlpha.animateTo(
@@ -135,7 +113,7 @@ private fun ImpulseSplash(onFinished: () -> Unit) {
             .testTag("splash-screen"),
     ) {
         Image(
-            bitmap = splashBitmap,
+            painter = painterResource(R.drawable.impulse_splash),
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
