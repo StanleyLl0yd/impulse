@@ -4,8 +4,8 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
+import androidx.test.espresso.Espresso.pressBack
 import org.junit.Rule
 import org.junit.Test
 
@@ -33,7 +33,7 @@ class ImpulseLaunchTest {
         composeRule.onNodeWithTag("achievements-stars").assertExists()
         composeRule.onNodeWithTag("statistics-attempts").assertExists()
         composeRule.onNodeWithTag("statistics-best-chain").assertExists()
-        composeRule.onNodeWithTag("menu-back").performScrollTo().performClick()
+        pressBack()
         advanceUntilExists("menu-about")
 
         composeRule.onNodeWithTag("menu-about").performClick()
