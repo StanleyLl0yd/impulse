@@ -83,10 +83,10 @@ class PlayerStateRepository(context: Context) {
         require(maximumChainDepth >= 0)
 
         dataStore.edit { preferences ->
-            val scoreKey = scoreKey(levelNumber)
-            val starsKey = starsKey(levelNumber)
-            val currentScore = preferences[scoreKey] ?: 0
-            val currentStars = preferences[starsKey] ?: 0
+            val levelScoreKey = scoreKey(levelNumber)
+            val levelStarsKey = starsKey(levelNumber)
+            val currentScore = preferences[levelScoreKey] ?: 0
+            val currentStars = preferences[levelStarsKey] ?: 0
             val currentHighestUnlocked = expandedCampaignHighestUnlocked(
                 storedHighestUnlocked = preferences[HIGHEST_UNLOCKED] ?: 1,
                 previousFinalLevel = PREVIOUS_FINAL_LEVEL,
@@ -110,8 +110,8 @@ class PlayerStateRepository(context: Context) {
                 success = success,
             )
 
-            if (progressUpdate.bestScore != currentScore) preferences[scoreKey] = progressUpdate.bestScore
-            if (progressUpdate.bestStars != currentStars) preferences[starsKey] = progressUpdate.bestStars
+            if (progressUpdate.bestScore != currentScore) preferences[levelScoreKey] = progressUpdate.bestScore
+            if (progressUpdate.bestStars != currentStars) preferences[levelStarsKey] = progressUpdate.bestStars
             preferences[HIGHEST_UNLOCKED] = progressUpdate.highestUnlockedLevel
 
             preferences[TOTAL_ATTEMPTS] = statisticsUpdate.totalAttempts
