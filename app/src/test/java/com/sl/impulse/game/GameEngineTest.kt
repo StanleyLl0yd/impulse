@@ -56,6 +56,73 @@ class GameEngineTest {
     }
 
     @Test
+    fun boosterEmitsLargerReactionWave() {
+        val standard = GameEngine(seed = 91L, particleCount = 1, requiredCount = 1)
+        val booster = GameEngine(
+            seed = 91L,
+            particleCount = 1,
+            requiredCount = 1,
+            particleMix = ParticleMix(boosterCount = 1),
+        )
+        val position = standard.snapshot().particles.single().position
+
+        standard.tap(position)
+        booster.tap(position)
+        advanceUntilTriggered(standard)
+        advanceUntilTriggered(booster)
+
+        val standardWave = standard.snapshot().waves.first { it.sourceType == ParticleType.STANDARD }
+        val boosterWave = booster.snapshot().waves.first { it.sourceType == ParticleType.BOOSTER }
+        assertTrue(boosterWave.maximumRadius > standardWave.maximumRadius)
+    }
+
+    @Test
+    fun fuseWaitsBeforeEmittingReactionWave() {
+        val engine = GameEngine(
+            seed = 92L,
+            particleCount = 1,
+            requiredCount = 1,
+            particleMix = ParticleMix(fuseCount = 1),
+        )
+        val particle = engine.snapshot().particles.single()
+
+        engine.tap(particle.position)
+        advanceUntilTriggered(engine)
+
+        var snapshot = engine.snapshot()
+        assertEquals(ParticleType.FUSE, snapshot.particles.single().type)
+        assertTrue(snapshot.particles.single().reactionPending)
+        assertEquals(0.0, snapshot.waves.first { it.sourceType == ParticleType.FUSE }.radius, 0.0)
+
+        repeat(20) { engine.advance(1.0 / 60.0) }
+        snapshot = engine.snapshot()
+        assertTrue(snapshot.particles.single().reactionPending)
+        assertEquals(0.0, snapshot.waves.first { it.sourceType == ParticleType.FUSE }.radius, 0.0)
+
+        repeat(20) { engine.advance(1.0 / 60.0) }
+        snapshot = engine.snapshot()
+        assertFalse(snapshot.particles.single().reactionPending)
+        assertTrue(snapshot.waves.first { it.sourceType == ParticleType.FUSE }.radius > 0.0)
+    }
+
+    @Test
+    fun anchorRemainsStationaryUntilTriggered() {
+        val engine = GameEngine(
+            seed = 93L,
+            particleCount = 1,
+            requiredCount = 1,
+            particleMix = ParticleMix(anchorCount = 1),
+        )
+        val initial = engine.snapshot().particles.single()
+
+        repeat(240) { engine.advance(1.0 / 60.0) }
+
+        val after = engine.snapshot().particles.single()
+        assertEquals(ParticleType.ANCHOR, after.type)
+        assertEquals(initial.position, after.position)
+    }
+
+    @Test
     fun tapFarFromOnlyParticleFails() {
         val engine = GameEngine(seed = 11L, particleCount = 1, requiredCount = 1)
         val snapshot = engine.snapshot()
@@ -131,6 +198,14 @@ class GameEngineTest {
         advanceUntilFinished(engine)
 
         assertTrue(engine.snapshot().finished)
+    }
+
+    private fun advanceUntilTriggered(engine: GameEngine) {
+        repeat(240) {
+            if (engine.snapshot().triggeredCount > 0) return
+            engine.advance(1.0 / 60.0)
+        }
+        assertTrue("Particle was not triggered", engine.snapshot().triggeredCount > 0)
     }
 
     private fun advanceUntilFinished(engine: GameEngine) {
