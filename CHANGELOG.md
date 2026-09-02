@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.0 - 2026-09-02
+
+### Added
+
+- Fully offline procedural adaptive ambient music that reacts subtly to chain depth without bundled tracks, streaming, network access, or third-party audio SDKs.
+- Persistent High Contrast accessibility mode alongside Reduced Effects, Sound, Music, and Haptics.
+- High-contrast field framing, stronger reaction-wave strokes, brighter particle outlines, and shape-preserving special-particle markers.
+- English and Russian accessibility copy plus API 37 runtime coverage for the new High Contrast control.
+
+### Changed
+
+- Game-feel settings now explicitly include accessibility controls while remaining fully local to the device.
+- Final 1.0.0 regression hardening reuses the complete deterministic campaign, replay, scoring, progression, migration, achievement, and winning-opening test suite without changing gameplay rules or seeds.
+- Android version is now 1.0.0 with `versionCode 12`.
+
 ## 0.9.0 - 2026-09-02
 
 ### Added

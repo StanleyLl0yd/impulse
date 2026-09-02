@@ -17,11 +17,13 @@ import kotlin.math.sin
 
 private const val BURST_DURATION_SECONDS = 0.34f
 private val GameBackgroundColors = listOf(Color(0xFF0D1731), Background)
+private val HighContrastBackgroundColors = listOf(Color(0xFF071225), Color.Black)
 
 internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean) {
+    val highContrast = HighContrastMode.enabled.value
     drawRect(
         brush = Brush.radialGradient(
-            colors = GameBackgroundColors,
+            colors = if (highContrast) HighContrastBackgroundColors else GameBackgroundColors,
             center = Offset(size.width * 0.5f, size.height * 0.42f),
             radius = maxOf(size.width, size.height) * 0.82f,
         ),
@@ -29,6 +31,15 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
 
     val viewport = calculateGameViewport(size.width, size.height, snapshot.field)
     if (viewport.scale <= 0f) return
+
+    if (highContrast) {
+        drawRect(
+            color = Color.White.copy(alpha = 0.26f),
+            topLeft = Offset(viewport.left, viewport.top),
+            size = androidx.compose.ui.geometry.Size(viewport.width, viewport.height),
+            style = Stroke(width = 1.5f),
+        )
+    }
 
     clipRect(
         left = viewport.left,
@@ -45,7 +56,7 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
                 }
             } ?: 0f
             if (impact > 0f) {
-                drawRect(TriggeredGlow.copy(alpha = impact * 0.055f))
+                drawRect(TriggeredGlow.copy(alpha = impact * if (highContrast) 0.08f else 0.055f))
             }
         }
 
@@ -66,23 +77,23 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
 
             if (!reducedEffects) {
                 drawCircle(
-                    color = color.copy(alpha = fade * 0.07f),
+                    color = color.copy(alpha = fade * if (highContrast) 0.11f else 0.07f),
                     radius = radius,
                     center = center,
                     style = Stroke(width = 18f * fade + 5f),
                 )
                 drawCircle(
-                    color = color.copy(alpha = fade * 0.18f),
+                    color = color.copy(alpha = fade * if (highContrast) 0.26f else 0.18f),
                     radius = (radius - 2f).coerceAtLeast(0f),
                     center = center,
                     style = Stroke(width = 7f * fade + 2f),
                 )
             }
             drawCircle(
-                color = color.copy(alpha = fade * 0.9f),
+                color = if (highContrast) Color.White.copy(alpha = fade * 0.92f) else color.copy(alpha = fade * 0.9f),
                 radius = radius,
                 center = center,
-                style = Stroke(width = 1.8f + fade * 2.2f),
+                style = Stroke(width = if (highContrast) 3.2f + fade * 2.8f else 1.8f + fade * 2.2f),
             )
         }
 
@@ -103,22 +114,31 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
                 )
                 val delta = center - previousCenter
                 drawLine(
-                    color = glow.copy(alpha = 0.18f),
+                    color = glow.copy(alpha = if (highContrast) 0.28f else 0.18f),
                     start = center - delta * 14f,
                     end = center,
-                    strokeWidth = (radius * 0.7f).coerceAtLeast(1f),
+                    strokeWidth = (radius * if (highContrast) 0.9f else 0.7f).coerceAtLeast(1f),
                     cap = StrokeCap.Round,
                 )
             }
 
             if (!reducedEffects) {
-                drawCircle(glow.copy(alpha = 0.08f), radius * 4.4f, center)
-                drawCircle(glow.copy(alpha = 0.18f), radius * 2.5f, center)
+                drawCircle(glow.copy(alpha = if (highContrast) 0.12f else 0.08f), radius * 4.4f, center)
+                drawCircle(glow.copy(alpha = if (highContrast) 0.24f else 0.18f), radius * 2.5f, center)
             } else {
-                drawCircle(glow.copy(alpha = 0.14f), radius * 1.8f, center)
+                drawCircle(glow.copy(alpha = if (highContrast) 0.22f else 0.14f), radius * 1.8f, center)
             }
 
-            drawParticleMarker(particle, center, radius, glow, core, reducedEffects)
+            if (highContrast) {
+                drawCircle(
+                    color = Color.White.copy(alpha = if (particle.triggered) 0.9f else 0.76f),
+                    radius = radius * 1.28f,
+                    center = center,
+                    style = Stroke(width = (radius * 0.2f).coerceAtLeast(1.5f)),
+                )
+            }
+
+            drawParticleMarker(particle, center, radius, glow, core, reducedEffects, highContrast)
 
             if (particle.triggered) {
                 val burstLife = (
@@ -128,10 +148,10 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
                 drawCircle(core, radius * pulse, center)
                 if (particle.reactionPending) {
                     drawCircle(
-                        color = FuseGlow.copy(alpha = 0.9f),
+                        color = if (highContrast) Color.White else FuseGlow.copy(alpha = 0.9f),
                         radius = radius * 1.85f,
                         center = center,
-                        style = Stroke(width = (radius * 0.34f).coerceAtLeast(1.2f)),
+                        style = Stroke(width = (radius * if (highContrast) 0.45f else 0.34f).coerceAtLeast(1.2f)),
                     )
                 }
                 if (!reducedEffects && burstLife > 0f) {
@@ -140,12 +160,12 @@ internal fun DrawScope.drawGame(snapshot: GameSnapshot, reducedEffects: Boolean)
                         radius = radius,
                         life = burstLife,
                         chainDepth = particle.chainDepth,
-                        color = core,
+                        color = if (highContrast) Color.White else core,
                     )
                 }
             } else {
                 drawCircle(core, radius, center)
-                drawCircle(Color.White.copy(alpha = 0.52f), radius * 0.34f, center)
+                drawCircle(Color.White.copy(alpha = if (highContrast) 0.78f else 0.52f), radius * 0.34f, center)
             }
         }
     }
@@ -158,15 +178,16 @@ private fun DrawScope.drawParticleMarker(
     glow: Color,
     core: Color,
     reducedEffects: Boolean,
+    highContrast: Boolean,
 ) {
     if (particle.triggered) return
 
-    val markerWidth = (radius * 0.24f).coerceAtLeast(1f)
+    val markerWidth = (radius * if (highContrast) 0.36f else 0.24f).coerceAtLeast(if (highContrast) 1.5f else 1f)
     when (particle.type) {
         ParticleType.STANDARD -> Unit
         ParticleType.BOOSTER -> {
             drawCircle(
-                color = BoosterGlow.copy(alpha = if (reducedEffects) 0.65f else 0.9f),
+                color = if (highContrast) Color.White else BoosterGlow.copy(alpha = if (reducedEffects) 0.65f else 0.9f),
                 radius = radius * 1.65f,
                 center = center,
                 style = Stroke(width = markerWidth),
@@ -174,13 +195,13 @@ private fun DrawScope.drawParticleMarker(
         }
         ParticleType.FUSE -> {
             drawCircle(
-                color = FuseGlow.copy(alpha = if (reducedEffects) 0.68f else 0.94f),
+                color = if (highContrast) Color.White else FuseGlow.copy(alpha = if (reducedEffects) 0.68f else 0.94f),
                 radius = radius * 1.55f,
                 center = center,
                 style = Stroke(width = markerWidth),
             )
             drawCircle(
-                color = Background.copy(alpha = 0.82f),
+                color = Background.copy(alpha = 0.9f),
                 radius = radius * 0.27f,
                 center = center,
             )
@@ -188,21 +209,22 @@ private fun DrawScope.drawParticleMarker(
         ParticleType.ANCHOR -> {
             val reach = radius * 1.8f
             val gap = radius * 1.18f
+            val markerColor = if (highContrast) Color.White else glow.copy(alpha = 0.86f)
             drawCircle(
-                color = glow.copy(alpha = 0.86f),
+                color = markerColor,
                 radius = radius * 1.5f,
                 center = center,
                 style = Stroke(width = markerWidth),
             )
-            drawLine(glow, center + Offset(-reach, 0f), center + Offset(-gap, 0f), markerWidth)
-            drawLine(glow, center + Offset(reach, 0f), center + Offset(gap, 0f), markerWidth)
-            drawLine(glow, center + Offset(0f, -reach), center + Offset(0f, -gap), markerWidth)
-            drawLine(glow, center + Offset(0f, reach), center + Offset(0f, gap), markerWidth)
+            drawLine(markerColor, center + Offset(-reach, 0f), center + Offset(-gap, 0f), markerWidth)
+            drawLine(markerColor, center + Offset(reach, 0f), center + Offset(gap, 0f), markerWidth)
+            drawLine(markerColor, center + Offset(0f, -reach), center + Offset(0f, -gap), markerWidth)
+            drawLine(markerColor, center + Offset(0f, reach), center + Offset(0f, gap), markerWidth)
         }
     }
 
     if (particle.type != ParticleType.STANDARD) {
-        drawCircle(core.copy(alpha = 0.22f), radius * 1.2f, center, style = Stroke(markerWidth))
+        drawCircle(core.copy(alpha = if (highContrast) 0.34f else 0.22f), radius * 1.2f, center, style = Stroke(markerWidth))
     }
 }
 
