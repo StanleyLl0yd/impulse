@@ -1,6 +1,8 @@
 package com.sl.impulse.progress
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ProgressStateTest {
@@ -14,7 +16,7 @@ class ProgressStateTest {
             score = 1200,
             stars = 2,
             success = true,
-            totalLevels = 20,
+            totalLevels = 60,
         )
         val weakerReplay = calculateProgressUpdate(
             currentHighestUnlockedLevel = first.highestUnlockedLevel,
@@ -24,7 +26,7 @@ class ProgressStateTest {
             score = 900,
             stars = 1,
             success = true,
-            totalLevels = 20,
+            totalLevels = 60,
         )
 
         assertEquals(2, weakerReplay.highestUnlockedLevel)
@@ -35,39 +37,53 @@ class ProgressStateTest {
     @Test
     fun successfulFinalLevelDoesNotUnlockPastCampaign() {
         val result = calculateProgressUpdate(
-            currentHighestUnlockedLevel = 20,
+            currentHighestUnlockedLevel = 60,
             currentBestScore = 2500,
             currentBestStars = 2,
-            levelNumber = 20,
+            levelNumber = 60,
             score = 3000,
             stars = 3,
             success = true,
-            totalLevels = 20,
+            totalLevels = 60,
         )
 
-        assertEquals(20, result.highestUnlockedLevel)
+        assertEquals(60, result.highestUnlockedLevel)
         assertEquals(3000, result.bestScore)
         assertEquals(3, result.bestStars)
     }
 
     @Test
-    fun completedPreviousCampaignUnlocksFirstExpandedLevel() {
+    fun historicalCampaignBoundariesUnlockTheirNextContent() {
         assertEquals(
             21,
             expandedCampaignHighestUnlocked(
                 storedHighestUnlocked = 20,
-                previousFinalLevel = 20,
-                previousFinalStars = 2,
-                totalLevels = 40,
+                completedPreviousFinalLevels = setOf(20),
+                totalLevels = 60,
+            ),
+        )
+        assertEquals(
+            41,
+            expandedCampaignHighestUnlocked(
+                storedHighestUnlocked = 40,
+                completedPreviousFinalLevels = setOf(20, 40),
+                totalLevels = 60,
             ),
         )
         assertEquals(
             20,
             expandedCampaignHighestUnlocked(
                 storedHighestUnlocked = 20,
-                previousFinalLevel = 20,
-                previousFinalStars = 0,
-                totalLevels = 40,
+                completedPreviousFinalLevels = emptySet(),
+                totalLevels = 60,
+            ),
+        )
+        assertEquals(
+            40,
+            expandedCampaignHighestUnlocked(
+                storedHighestUnlocked = 40,
+                completedPreviousFinalLevels = setOf(20),
+                totalLevels = 60,
             ),
         )
     }
@@ -82,7 +98,7 @@ class ProgressStateTest {
             score = 700,
             stars = 0,
             success = false,
-            totalLevels = 20,
+            totalLevels = 60,
         )
 
         assertEquals(4, result.highestUnlockedLevel)
@@ -91,7 +107,7 @@ class ProgressStateTest {
     }
 
     @Test
-    fun progressSummariesUseStoredBestResults() {
+    fun progressSummariesUseStoredBestResultsAndRanges() {
         val progress = ProgressState(
             bestScores = mapOf(1 to 1200, 2 to 900, 4 to 1400),
             bestStars = mapOf(1 to 2, 2 to 3, 4 to 1),
@@ -101,6 +117,14 @@ class ProgressStateTest {
         assertEquals(3, progress.completedLevels)
         assertEquals(1, progress.perfectLevels)
         assertEquals(1400, progress.bestOverallScore)
+        assertEquals(3, progress.completedLevels(1..4))
+        assertEquals(1, progress.perfectLevels(1..4))
+        assertFalse(progress.isCompleted(1..4))
+        assertFalse(progress.isPerfect(1..4))
+
+        val perfectChapter = ProgressState(bestStars = (1..10).associateWith { 3 })
+        assertTrue(perfectChapter.isCompleted(1..10))
+        assertTrue(perfectChapter.isPerfect(1..10))
     }
 
     @Test

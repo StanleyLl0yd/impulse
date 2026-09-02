@@ -33,11 +33,9 @@ class PlayerStateRepository(context: Context) {
             if (error is IOException) emit(emptyPreferences()) else throw error
         }
         .map { preferences ->
-            val storedHighestUnlocked = preferences[HIGHEST_UNLOCKED] ?: 1
             val highestUnlocked = expandedCampaignHighestUnlocked(
-                storedHighestUnlocked = storedHighestUnlocked,
-                previousFinalLevel = PREVIOUS_FINAL_LEVEL,
-                previousFinalStars = preferences[starsKey(PREVIOUS_FINAL_LEVEL)] ?: 0,
+                storedHighestUnlocked = preferences[HIGHEST_UNLOCKED] ?: 1,
+                completedPreviousFinalLevels = completedPreviousCampaigns(preferences),
                 totalLevels = totalLevels,
             )
             val selectedLevel = (preferences[SELECTED_LEVEL] ?: highestUnlocked).coerceIn(1, totalLevels)
@@ -89,8 +87,7 @@ class PlayerStateRepository(context: Context) {
             val currentStars = preferences[levelStarsKey] ?: 0
             val currentHighestUnlocked = expandedCampaignHighestUnlocked(
                 storedHighestUnlocked = preferences[HIGHEST_UNLOCKED] ?: 1,
-                previousFinalLevel = PREVIOUS_FINAL_LEVEL,
-                previousFinalStars = preferences[starsKey(PREVIOUS_FINAL_LEVEL)] ?: 0,
+                completedPreviousFinalLevels = completedPreviousCampaigns(preferences),
                 totalLevels = totalLevels,
             )
             val progressUpdate = calculateProgressUpdate(
@@ -137,6 +134,11 @@ class PlayerStateRepository(context: Context) {
         dataStore.edit { preferences -> preferences[key] = enabled }
     }
 
+    private fun completedPreviousCampaigns(preferences: Preferences): Set<Int> =
+        PREVIOUS_FINAL_LEVELS.filterTo(mutableSetOf()) { level ->
+            (preferences[starsKey(level)] ?: 0) > 0
+        }
+
     private fun statisticsFrom(preferences: Preferences): PlayerStatistics = PlayerStatistics(
         totalAttempts = (preferences[TOTAL_ATTEMPTS] ?: 0).coerceAtLeast(0),
         successfulAttempts = (preferences[SUCCESSFUL_ATTEMPTS] ?: 0).coerceAtLeast(0),
@@ -146,7 +148,7 @@ class PlayerStateRepository(context: Context) {
     )
 
     private companion object {
-        const val PREVIOUS_FINAL_LEVEL = 20
+        val PREVIOUS_FINAL_LEVELS = setOf(20, 40)
 
         val HIGHEST_UNLOCKED = intPreferencesKey("highest_unlocked_level")
         val SELECTED_LEVEL = intPreferencesKey("selected_level")

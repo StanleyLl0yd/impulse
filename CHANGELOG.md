@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.8.0 - 2026-09-02
+
+### Added
+
+- Twenty new deterministic campaign levels, expanding the campaign from 40 to 60 levels.
+- Six ten-level chapters: Impulse, Momentum, Boost, Control, Resonance, and Chaos.
+- Chapter headers and progress inside the level picker and Achievements screen.
+- A data-driven catalog of 21 local achievements grouped into Journey, Mastery, Chain, and Endurance.
+- New achievement goals for chapter completion, full-chapter perfection, deep chains, large reactions, total triggered particles, attempts, and wins.
+- Contextual introductions for the denser Resonance and Chaos chapters in English and Russian.
+- Verified winning-opening regression coverage for every new level from 41 through 60.
+
+### Changed
+
+- Levels 41–50 build denser mixed-mechanic Resonance fields; levels 51–60 push Booster, Fuse, and Anchor combinations further in Chaos without adding another player input.
+- Campaign migration now understands both previous final levels, 20 and 40, so players can update directly from older releases without losing their continuation point.
+- Achievements now show an unlocked total and per-chapter completion/perfect counts while continuing to derive entirely from local progress and statistics.
+- Android version is now 0.8.0 with `versionCode 10`.
+
 ## 0.7.0 - 2026-09-02
 
 ### Added
@@ -119,7 +138,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Layered neon wave rendering, particle trails, activation flashes, pulse bursts, and depth-reactive visual feedback.
-- Sound feedback for the initial impulse, chain reactions, success, and failure without adding network or analytics dependencies.
+- Sound feedback for the initial impulse, chain growth, success, and failure without adding network or analytics dependencies.
 - Haptic feedback for taps, chain activations, and final results using platform haptic feedback.
 - In-session Game Feel controls for sound, haptics, and reduced effects.
 - Near-miss result messaging and a stronger result/retry panel.

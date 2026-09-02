@@ -31,6 +31,8 @@ class ImpulseLaunchTest {
         advanceUntilExists("achievements-screen")
         composeRule.onNodeWithTag("achievements-level").assertExists()
         composeRule.onNodeWithTag("achievements-stars").assertExists()
+        composeRule.onNodeWithTag("achievements-unlocked").assertExists()
+        composeRule.onNodeWithTag("chapter-progress-1").assertExists()
         composeRule.onNodeWithTag("statistics-attempts").assertExists()
         composeRule.onNodeWithTag("statistics-best-chain").assertExists()
         pressBack()
@@ -50,13 +52,15 @@ class ImpulseLaunchTest {
     }
 
     @Test
-    fun levelPickerShowsCampaign() {
+    fun levelPickerShowsSixChapterCampaign() {
         enterNewGame()
 
         composeRule.onNodeWithTag("level-button").performClick()
         advanceUntilExists("level-picker")
+        composeRule.onNodeWithTag("chapter-1").assertExists()
+        composeRule.onNodeWithTag("chapter-6").assertExists()
         composeRule.onNodeWithTag("level-1").assertExists()
-        composeRule.onNodeWithTag("level-20").assertExists()
+        composeRule.onNodeWithTag("level-60").assertExists()
     }
 
     @Test

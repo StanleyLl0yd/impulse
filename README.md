@@ -22,86 +22,83 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **0.5.0** (`versionCode 6`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **0.8.0** (`versionCode 10`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
-1. Watch the particles move.
-2. Tap once to place the only player impulse.
-3. Let the wave expand and trigger nearby particles.
-4. Triggered particles emit their own waves.
-5. Reach the target before the reaction dies out — or retry immediately.
-6. Complete levels, improve the score, and collect up to three stars per level.
-
-The current campaign contains **20 deterministic levels** with increasing particle counts and completion targets.
+1. Watch the field.
+2. Tap once to place your only impulse.
+3. Let the wave trigger nearby particles.
+4. Use standard particles, Boosters, delayed Fuses, and fixed Anchors to extend the reaction.
+5. Reach the target before the chain dies out.
+6. Improve the same deterministic board for a better score and up to three stars.
 
 > One tap. One impulse. Maximum chain.
 
-## ✨ Current prototype
+## ✨ Current game
 
 - One-touch gameplay with a single impulse per attempt
-- 20 data-driven deterministic levels with increasing targets
-- Five-second branded IMPULSE launch splash followed by a dedicated main menu
-- Main menu actions for Continue, New game, Achievements, About, and Exit
-- Continue opens the highest unlocked level; New game starts at level 1 without deleting progress
-- Achievements summary for the highest unlocked level and total earned stars
-- Level unlocking, next-level flow, and a compact campaign picker
-- Per-level score, 1–3 star evaluation, best-score tracking, and total-star progress
-- Local persistence for progress, selected level, best results, and Game Feel settings through AndroidX DataStore
-- Moving particles with wall reflection
-- Expanding player and reaction waves
-- Chain depth tracking and triggered-particle counter
-- Instant deterministic retry of the same level
-- Frame-rate-independent fixed-step simulation
-- Layered neon waves, trails, activation flashes, pulse bursts, and depth-reactive visual feedback
-- Sound and haptic feedback for taps, chain activations, success, and failure
+- **60 deterministic campaign levels** grouped into six ten-level chapters
+- Chapters: **Impulse, Momentum, Boost, Control, Resonance, Chaos**
+- Standard, Booster, Fuse, and Anchor particles with distinct behavior and visual language
+- Contextual onboarding for the core rule and newly introduced gameplay patterns
+- Level unlocking, next-level flow, chapter-aware picker, score, 1–3 stars, and best-result tracking
+- **21 local achievements** grouped into Journey, Mastery, Chain, and Endurance
+- Achievement and statistics screen with chapter completion/perfection progress
+- Local statistics for attempts, wins, success rate, triggered particles, best chain, depth, and score
+- Local persistence through AndroidX DataStore
+- Deterministic same-level retry with fixed-step 60 Hz simulation
+- Layered neon waves, trails, activation flashes, sound, and haptic feedback
 - Persistent controls for sound, haptics, and reduced effects
-- Near-miss messaging and result/retry/next-level UX
-- Russian and English interface resources
+- English and Russian interface resources
 - Portrait-first Android experience
-- No account, backend, analytics, ads, or network permission
+- No account, backend, analytics, ads, cloud dependency, or `INTERNET` permission
 
-The current build now provides a complete local campaign loop: **launch into the menu, continue the highest unlocked level or start again from level 1, make one impulse, earn a result, persist progress, and continue or improve the same deterministic challenge.**
+## 🧩 Campaign
+
+| Chapter | Levels | Focus |
+| --- | ---: | --- |
+| I · Impulse | 1–10 | Core one-tap chain reaction |
+| II · Momentum | 11–20 | Denser standard-particle fields |
+| III · Boost | 21–30 | Booster reach and Fuse timing |
+| IV · Control | 31–40 | Anchors and mixed mechanics |
+| V · Resonance | 41–50 | Dense coordinated combinations |
+| VI · Chaos | 51–60 | Full-system mastery |
+
+Levels use stable seeds, so retries reproduce the same logical challenge. The campaign is protected by deterministic regression tests, including verified winning openings for levels 21–60.
 
 ## 🎮 Game feel
 
 IMPULSE is designed around clarity and escalation rather than visual noise:
 
-- **launch** — the app opens from pure black, reveals the IMPULSE artwork over five seconds, then opens the main menu;
-- **menu** — Continue resumes at the highest unlocked level, while New game starts from level 1 without clearing progress;
-- **campaign** — unlocked levels expose their best star result and the campaign tracks total stars;
+- **launch** — a five-second branded reveal opens into the main menu;
 - **idle** — cool cyan particles move quietly across the field;
 - **tap** — one cyan impulse expands from the chosen point;
-- **chain** — triggered particles switch to violet/magenta and emit new waves;
-- **result** — score, stars, success, failure, and near misses resolve quickly so retry or the next level is one step away.
+- **Boosters** — pink particles create larger reaction waves;
+- **Fuses** — gold particles delay their wave before expansion;
+- **Anchors** — blue fixed particles act as reliable relay points;
+- **chain** — activation colors and wave feedback make propagation readable;
+- **result** — chain size, target, depth, score, stars, new-best feedback, retry, and next level resolve quickly.
 
-The simulation is deterministic and seedable so each level can be reproduced across devices, retries, and tests, while rendering remains free to run at the display refresh rate.
+Rendering can run at the display refresh rate while gameplay remains deterministic through a fixed 60 Hz simulation.
 
 ## 📦 Availability
 
-The latest public build, **IMPULSE 0.5.0**, is available through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases/tag/v0.5.0) with signed APK and AAB artifacts plus SHA-256 checksums.
+Official signed APK and AAB builds are published through [GitHub Releases](https://github.com/StanleyLl0yd/impulse/releases) with SHA-256 checksums and GitHub artifact attestations.
 
 The repository is publicly visible for project transparency and review. **Public visibility does not grant permission to copy, build, modify, execute, redistribute, or otherwise use the source code or assets.** See [LICENSE](LICENSE).
 
-Android 8.0 or newer is required for the public build.
+Android 8.0 or newer is required.
 
 ## 🛠️ Development
 
-The following commands are for the copyright owner and explicitly authorized development only. They do not grant a license to anyone else.
+The following commands are for the copyright owner and explicitly authorized development only.
 
 Requirements:
 
 - JDK 17
 - Android SDK 37
 - Gradle 9.7.1 through the repository Gradle Wrapper
-
-Build the debug application from an authorized working copy:
-
-```bash
-./gradlew assembleDebug
-```
-
-Run the main local verification:
 
 ```bash
 ./gradlew testDebugUnitTest lintDebug assembleDebug
@@ -126,67 +123,40 @@ Windows:
 | Android | minSdk 26, targetSdk 37, compileSdk 37 |
 | Application ID / namespace | `com.sl.impulse` |
 
-Gameplay state and simulation are kept separate from rendering, while campaign progress and preferences are stored locally outside the engine.
+Gameplay state and simulation remain separate from rendering. Campaign progress, statistics, achievements, and preferences remain local to the device.
 
 ## ✅ Quality and security checks
 
-Pull requests and pushes to `main` are automatically checked with:
+Pull requests and pushes to `main` are automatically checked with unit tests, Android Lint, debug/release assembly, API 37 runtime instrumentation tests, CodeQL, Semgrep, Gitleaks, and scheduled/manual Qodana analysis. Weekly runtime coverage also targets the minimum API 26.
 
-- unit tests;
-- Android Lint;
-- debug and release APK/AAB assembly;
-- Android instrumentation-test compilation;
-- runtime instrumentation tests on API 37;
-- weekly runtime coverage on the minimum API 26;
-- CodeQL for Java/Kotlin;
-- Semgrep security and secret rules;
-- Gitleaks across full Git history;
-- scheduled/manual Qodana analysis.
-
-Third-party GitHub Actions are pinned to immutable commit SHAs, workflow permissions follow least privilege, and the protected `main` branch requires `Verify`, `Analyze Java and Kotlin`, `Semgrep`, and `Gitleaks` before squash merge.
+The protected `main` branch requires the configured verification checks before squash merge. Third-party GitHub Actions are pinned to immutable commit SHAs and workflow permissions follow least privilege.
 
 Security issues should be reported according to [SECURITY.md](SECURITY.md).
 
 ## 🔐 Release integrity
 
-Official releases are tag-driven with `vMAJOR.MINOR.PATCH` tags that must match `versionName`.
+Official releases are tag-driven with `vMAJOR.MINOR.PATCH` tags matching `versionName`. The release workflow validates the source version and required checks, builds with the owner-provided signing identity, verifies APK/AAB signatures and certificate identity, generates SHA-256 checksums and artifact attestations, then publishes the GitHub Release. Signing secrets and keystore material are never stored in the repository.
 
-The Android Release workflow:
-
-1. validates the tag, source version, `versionCode`, and successful required checks for the tagged `main` commit;
-2. runs tests and Android Lint;
-3. restores the owner-provided signing key only inside the protected `release` environment;
-4. builds signed APK and AAB artifacts;
-5. verifies APK Signature Schemes v2/v3, signer count, and the expected certificate SHA-256 for both APK and AAB;
-6. generates SHA-256 checksums;
-7. creates GitHub artifact attestations for APK and AAB;
-8. publishes a GitHub Release only after verification succeeds.
-
-The keystore and signing passwords are never stored in the repository. See [docs/RELEASE.md](docs/RELEASE.md).
+See [docs/RELEASE.md](docs/RELEASE.md).
 
 ## 🔒 Privacy
 
-- **Offline by default** — the app does not request Android `INTERNET` permission
-- **No account, analytics, tracking, or advertising**
-- Progress and settings are stored locally on the device through DataStore
+- Offline by design; no Android `INTERNET` permission
+- No account, analytics, tracking, or advertising
+- Progress, statistics, achievements, and settings stay on the device
 - No backend or cloud dependency
 - No dangerous Android runtime permissions in the current scope
-
-This boundary is intentional and remains the default unless a future feature has a concrete reason to change it.
 
 ## 🌍 Languages
 
 - English — default
 - Русский
 
-The interface follows the device language through Android resources.
-
 ## 🗺 Roadmap
 
-- **Current:** 20-level deterministic campaign, main menu with continue/new-game flow, achievements summary, unlocking, scoring, stars, local persistence, polished visual/audio/haptic game feel, and five-second cinematic launch
-- **Next:** level balancing, tutorial/onboarding, accessibility pass, and richer local statistics
-- **Content:** expand toward roughly 60 handcrafted/generated levels for the first complete release
-- **Later:** endless mode and daily challenge after the core campaign loop is proven
+- **0.8.0 · Content:** 60-level campaign, six chapters, full local achievements
+- **0.9.0:** Endless, Daily Impulse, Share Result
+- **1.0.0:** final campaign balance, audiovisual polish, dedicated accessibility pass, regression hardening, production release
 
 The product direction is tracked in [PROJECT.md](PROJECT.md).
 
@@ -197,9 +167,7 @@ The product direction is tracked in [PROJECT.md](PROJECT.md).
 
 ## 🤝 Feedback and contributions
 
-Bug reports and suggestions are welcome.
-
-Source-code, asset, documentation, or other project contributions are accepted only when explicitly agreed in advance by the copyright owner. Submission of material does not grant any license to IMPULSE and does not alter ownership of the project. Project-specific rules are documented in [AGENTS.md](AGENTS.md).
+Bug reports and suggestions are welcome. Source-code, asset, documentation, or other contributions are accepted only when explicitly agreed in advance by the copyright owner. Project-specific rules are documented in [AGENTS.md](AGENTS.md).
 
 ## 📄 License
 
@@ -207,7 +175,7 @@ Source-code, asset, documentation, or other project contributions are accepted o
 
 All original project code, assets, documentation, game design, and other original materials are owned by Stanley Lloyd. No permission is granted to copy, modify, build, execute, redistribute, publish, sublicense, sell, create derivative works from, or otherwise use any part of the project except where required by applicable law, GitHub's platform terms, or prior written permission from the copyright owner.
 
-Third-party dependencies remain under their respective licenses. See [LICENSE](LICENSE) for the authoritative terms.
+Third-party dependencies remain under their respective licenses. See [LICENSE](LICENSE).
 
 ## 👨‍💻 Author
 
