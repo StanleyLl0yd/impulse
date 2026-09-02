@@ -104,11 +104,12 @@
     <string name="score_result">SCORE %1$d</string>
     <string name="best_score">BEST %1$d</string>
     <string name="settings_short">FX</string>
-    <string name="settings_title">Game feel</string>
+    <string name="settings_title">Game feel &amp; accessibility</string>
     <string name="settings_sound">Sound</string>
     <string name="settings_music">Music</string>
     <string name="settings_haptics">Haptics</string>
     <string name="settings_reduced_effects">Reduced effects</string>
+    <string name="settings_high_contrast">High contrast</string>
     <string name="result_success_title">CHAIN COMPLETE</string>
     <string name="result_success_detail">The impulse reached depth %1$d</string>
     <string name="result_near_miss_title">SO CLOSE</string>
