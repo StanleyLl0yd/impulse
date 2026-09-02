@@ -106,6 +106,7 @@
     <string name="settings_short">FX</string>
     <string name="settings_title">Ощущение игры</string>
     <string name="settings_sound">Звук</string>
+    <string name="settings_music">Музыка</string>
     <string name="settings_haptics">Виброотклик</string>
     <string name="settings_reduced_effects">Меньше эффектов</string>
     <string name="result_success_title">ЦЕПЬ ЗАВЕРШЕНА</string>

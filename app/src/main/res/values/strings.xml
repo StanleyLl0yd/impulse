@@ -106,6 +106,7 @@
     <string name="settings_short">FX</string>
     <string name="settings_title">Game feel</string>
     <string name="settings_sound">Sound</string>
+    <string name="settings_music">Music</string>
     <string name="settings_haptics">Haptics</string>
     <string name="settings_reduced_effects">Reduced effects</string>
     <string name="result_success_title">CHAIN COMPLETE</string>

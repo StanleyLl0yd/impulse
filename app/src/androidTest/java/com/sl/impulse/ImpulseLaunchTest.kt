@@ -83,6 +83,7 @@ class ImpulseLaunchTest {
         composeRule.onNodeWithTag("settings-button").performClick()
         advanceUntilExists("settings-panel")
         composeRule.onNodeWithTag("sound-toggle").assertExists()
+        composeRule.onNodeWithTag("music-toggle").assertExists()
         composeRule.onNodeWithTag("haptics-toggle").assertExists()
         composeRule.onNodeWithTag("reduced-effects-toggle").assertExists()
     }

@@ -66,6 +66,7 @@ internal fun SettingsPanel(
                 onCheckedChange = onSoundChanged,
                 testTag = "sound-toggle",
             )
+            MusicSettingRow()
             SettingRow(
                 label = stringResource(R.string.settings_haptics),
                 checked = hapticsEnabled,
