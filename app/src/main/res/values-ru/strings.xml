@@ -37,6 +37,11 @@
     <string name="tutorial_level_1">Коснитесь один раз. Ваш единственный импульс запускает реакцию.</string>
     <string name="tutorial_level_2">Активированные частицы создают новые волны. Выберите момент, который свяжет самую большую группу.</string>
     <string name="tutorial_level_3">Достигните цели, чтобы пройти уровень. Больше частиц дадут 2 звезды, все частицы — 3.</string>
+    <string name="mechanic_title">НОВАЯ МЕХАНИКА</string>
+    <string name="mechanic_booster">Розовые усилители при активации создают увеличенную волну.</string>
+    <string name="mechanic_fuse">Золотые частицы с задержкой немного ждут перед распространением своей волны.</string>
+    <string name="mechanic_anchor">Синие якоря остаются неподвижными и дают цепи надёжные точки-ретрансляторы.</string>
+    <string name="mechanic_mix">Усилители, задержки и якоря теперь встречаются вместе. Используйте дальность, время и фиксированные позиции в одной цепи.</string>
     <string name="chain_depth">ГЛУБИНА %1$d</string>
     <string name="retry">Ещё раз</string>
     <string name="next_level">Следующий уровень</string>

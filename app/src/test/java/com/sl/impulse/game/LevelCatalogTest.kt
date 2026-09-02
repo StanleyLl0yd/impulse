@@ -6,11 +6,25 @@ import org.junit.Test
 
 class LevelCatalogTest {
     @Test
-    fun catalogContainsTwentyOrderedValidLevels() {
-        assertEquals(20, LevelCatalog.levels.size)
-        assertEquals((1..20).toList(), LevelCatalog.levels.map { it.number })
-        assertEquals(20, LevelCatalog.levels.map { it.seed }.distinct().size)
+    fun catalogContainsFortyOrderedValidLevels() {
+        assertEquals(40, LevelCatalog.levels.size)
+        assertEquals((1..40).toList(), LevelCatalog.levels.map { it.number })
+        assertEquals(40, LevelCatalog.levels.map { it.seed }.distinct().size)
         assertTrue(LevelCatalog.levels.all { it.requiredCount < it.particleCount })
+        assertTrue(LevelCatalog.levels.all { it.particleMix.specialCount <= it.particleCount })
+    }
+
+    @Test
+    fun originalCampaignRemainsStandardAndNewMechanicsAreIntroducedProgressively() {
+        assertTrue(LevelCatalog.levels.take(20).all { it.particleMix.specialCount == 0 })
+        assertTrue(LevelCatalog.get(21).particleMix.boosterCount > 0)
+        assertTrue(LevelCatalog.get(26).particleMix.fuseCount > 0)
+        assertTrue(LevelCatalog.get(31).particleMix.anchorCount > 0)
+
+        val mixed = LevelCatalog.get(36).particleMix
+        assertTrue(mixed.boosterCount > 0)
+        assertTrue(mixed.fuseCount > 0)
+        assertTrue(mixed.anchorCount > 0)
     }
 
     @Test

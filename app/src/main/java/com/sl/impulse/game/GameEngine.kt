@@ -32,9 +32,11 @@ data class ParticleSnapshot(
     val previousPosition: Vec2,
     val position: Vec2,
     val radius: Double,
+    val type: ParticleType,
     val triggered: Boolean,
     val chainDepth: Int,
     val triggeredAgeSeconds: Double,
+    val reactionPending: Boolean,
 )
 
 data class WaveSnapshot(
@@ -43,6 +45,7 @@ data class WaveSnapshot(
     val radius: Double,
     val maximumRadius: Double,
     val chainDepth: Int,
+    val sourceType: ParticleType?,
 )
 
 data class GameSnapshot(
@@ -62,6 +65,7 @@ class GameEngine(
     private val seed: Long = DEFAULT_SEED,
     particleCount: Int = DEFAULT_PARTICLE_COUNT,
     val requiredCount: Int = DEFAULT_REQUIRED_COUNT,
+    private val particleMix: ParticleMix = ParticleMix(),
     val field: GameField = GameField.DEFAULT,
 ) {
     private data class Particle(
@@ -69,6 +73,7 @@ class GameEngine(
         var position: Vec2,
         var velocity: Vec2,
         val radius: Double,
+        val type: ParticleType,
         var triggered: Boolean = false,
         var chainDepth: Int = 0,
         var triggeredAgeSeconds: Double = 0.0,
@@ -81,6 +86,8 @@ class GameEngine(
         val maximumRadius: Double,
         val growthRate: Double,
         val chainDepth: Int,
+        val sourceType: ParticleType?,
+        var delayRemainingSeconds: Double = 0.0,
     )
 
     private val particles = mutableListOf<Particle>()
@@ -98,6 +105,7 @@ class GameEngine(
     init {
         require(particleCount > 0)
         require(requiredCount in 1..particleCount)
+        require(particleMix.specialCount <= particleCount)
         require(field.width > PARTICLE_RADIUS_MAX * 2.0)
         require(field.height > PARTICLE_RADIUS_MAX * 2.0)
         resetParticles(particleCount)
@@ -117,6 +125,7 @@ class GameEngine(
             maximumRadius = PLAYER_WAVE_RADIUS,
             growthRate = PLAYER_WAVE_GROWTH,
             chainDepth = 0,
+            sourceType = null,
         )
         impulseUsed = true
         refreshCachedState()
@@ -177,7 +186,7 @@ class GameEngine(
     private fun moveParticles(step: Double) {
         for (particle in particles) {
             particle.previousPosition = particle.position
-            if (particle.triggered) continue
+            if (particle.triggered || particle.type == ParticleType.ANCHOR) continue
 
             var nextX = particle.position.x + particle.velocity.x * step
             var nextY = particle.position.y + particle.velocity.y * step
@@ -204,7 +213,16 @@ class GameEngine(
     private fun expandWaves(step: Double) {
         for (wave in waves) {
             wave.previousRadius = wave.radius
-            wave.radius = (wave.radius + wave.growthRate * step).coerceAtMost(wave.maximumRadius)
+            val activeStep = if (wave.delayRemainingSeconds > 0.0) {
+                val remaining = wave.delayRemainingSeconds
+                wave.delayRemainingSeconds = (remaining - step).coerceAtLeast(0.0)
+                (step - remaining).coerceAtLeast(0.0)
+            } else {
+                step
+            }
+            if (activeStep > 0.0) {
+                wave.radius = (wave.radius + wave.growthRate * activeStep).coerceAtMost(wave.maximumRadius)
+            }
         }
     }
 
@@ -224,15 +242,31 @@ class GameEngine(
 
         triggeredCount += newlyTriggered.size
         for (particle in newlyTriggered) {
-            waves += Wave(
-                origin = particle.position,
-                previousRadius = 0.0,
-                radius = 0.0,
-                maximumRadius = REACTION_WAVE_RADIUS,
-                growthRate = REACTION_WAVE_GROWTH,
-                chainDepth = particle.chainDepth,
-            )
+            waves += createReactionWave(particle)
         }
+    }
+
+    private fun createReactionWave(particle: Particle): Wave {
+        val maximumRadius = when (particle.type) {
+            ParticleType.BOOSTER -> BOOSTER_WAVE_RADIUS
+            else -> REACTION_WAVE_RADIUS
+        }
+        val growthRate = when (particle.type) {
+            ParticleType.BOOSTER -> BOOSTER_WAVE_GROWTH
+            else -> REACTION_WAVE_GROWTH
+        }
+        val delay = if (particle.type == ParticleType.FUSE) FUSE_DELAY_SECONDS else 0.0
+
+        return Wave(
+            origin = particle.position,
+            previousRadius = 0.0,
+            radius = 0.0,
+            maximumRadius = maximumRadius,
+            growthRate = growthRate,
+            chainDepth = particle.chainDepth,
+            sourceType = particle.type,
+            delayRemainingSeconds = delay,
+        )
     }
 
     private fun findCollisionSource(particle: Particle): Wave? {
@@ -240,6 +274,7 @@ class GameEngine(
         var bestImpactTime = Double.POSITIVE_INFINITY
 
         for (wave in waves) {
+            if (wave.delayRemainingSeconds > EPSILON) continue
             val distance = hypot(
                 particle.position.x - wave.origin.x,
                 particle.position.y - wave.origin.y,
@@ -281,9 +316,13 @@ class GameEngine(
                 previousPosition = particle.previousPosition,
                 position = particle.position,
                 radius = particle.radius,
+                type = particle.type,
                 triggered = particle.triggered,
                 chainDepth = particle.chainDepth,
                 triggeredAgeSeconds = particle.triggeredAgeSeconds,
+                reactionPending = particle.type == ParticleType.FUSE &&
+                    particle.triggered &&
+                    particle.triggeredAgeSeconds < FUSE_DELAY_SECONDS,
             )
         }
         cachedWaves = waves.map { wave ->
@@ -293,27 +332,56 @@ class GameEngine(
                 radius = wave.radius,
                 maximumRadius = wave.maximumRadius,
                 chainDepth = wave.chainDepth,
+                sourceType = wave.sourceType,
             )
         }
     }
 
     private fun resetParticles(count: Int) {
         particles.clear()
+        val types = createParticleTypes(count)
         val random = Random(seed)
-        repeat(count) {
+        repeat(count) { index ->
             val radius = PARTICLE_RADIUS_MIN +
                 random.nextDouble() * (PARTICLE_RADIUS_MAX - PARTICLE_RADIUS_MIN)
             val position = generatePosition(random, radius)
             val speed = PARTICLE_SPEED_MIN +
                 random.nextDouble() * (PARTICLE_SPEED_MAX - PARTICLE_SPEED_MIN)
             val angle = random.nextDouble() * Math.PI * 2.0
+            val type = types[index]
+            val velocity = if (type == ParticleType.ANCHOR) {
+                Vec2(0.0, 0.0)
+            } else {
+                Vec2(cos(angle) * speed, sin(angle) * speed)
+            }
             particles += Particle(
                 previousPosition = position,
                 position = position,
-                velocity = Vec2(cos(angle) * speed, sin(angle) * speed),
+                velocity = velocity,
                 radius = radius,
+                type = type,
             )
         }
+    }
+
+    private fun createParticleTypes(count: Int): List<ParticleType> {
+        if (particleMix.specialCount == 0) return List(count) { ParticleType.STANDARD }
+
+        val shuffledIndices = MutableList(count) { it }
+        val random = Random(seed xor SPECIAL_TYPE_SEED_MASK)
+        for (index in shuffledIndices.lastIndex downTo 1) {
+            val swapIndex = random.nextInt(index + 1)
+            val value = shuffledIndices[index]
+            shuffledIndices[index] = shuffledIndices[swapIndex]
+            shuffledIndices[swapIndex] = value
+        }
+
+        val types = MutableList(count) { ParticleType.STANDARD }
+        var cursor = 0
+        repeat(particleMix.boosterCount) { types[shuffledIndices[cursor++]] = ParticleType.BOOSTER }
+        repeat(particleMix.fuseCount) { types[shuffledIndices[cursor++]] = ParticleType.FUSE }
+        repeat(particleMix.anchorCount) { types[shuffledIndices[cursor++]] = ParticleType.ANCHOR }
+        return types
     }
 
     private fun generatePosition(random: Random, radius: Double): Vec2 {
@@ -366,6 +434,10 @@ class GameEngine(
         private const val PLAYER_WAVE_GROWTH = 0.56
         private const val REACTION_WAVE_RADIUS = 0.18
         private const val REACTION_WAVE_GROWTH = 0.45
+        private const val BOOSTER_WAVE_RADIUS = 0.28
+        private const val BOOSTER_WAVE_GROWTH = 0.54
+        private const val FUSE_DELAY_SECONDS = 0.55
+        private const val SPECIAL_TYPE_SEED_MASK = 0x5EED5EEDL
         private const val SPAWN_GAP = 0.006
         private const val SPAWN_GRID_STEP = PARTICLE_RADIUS_MAX * 2.0 + SPAWN_GAP
         private const val MAX_SPAWN_ATTEMPTS = 100

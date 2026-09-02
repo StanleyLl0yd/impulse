@@ -56,6 +56,120 @@ class GameEngineTest {
     }
 
     @Test
+    fun boosterEmitsLargerReactionWave() {
+        val standard = GameEngine(seed = 91L, particleCount = 1, requiredCount = 1)
+        val booster = GameEngine(
+            seed = 91L,
+            particleCount = 1,
+            requiredCount = 1,
+            particleMix = ParticleMix(boosterCount = 1),
+        )
+        val position = standard.snapshot().particles.single().position
+
+        standard.tap(position)
+        booster.tap(position)
+        advanceUntilTriggered(standard)
+        advanceUntilTriggered(booster)
+
+        val standardWave = standard.snapshot().waves.first { it.sourceType == ParticleType.STANDARD }
+        val boosterWave = booster.snapshot().waves.first { it.sourceType == ParticleType.BOOSTER }
+        assertTrue(boosterWave.maximumRadius > standardWave.maximumRadius)
+    }
+
+    @Test
+    fun fuseWaitsBeforeEmittingReactionWave() {
+        val engine = GameEngine(
+            seed = 92L,
+            particleCount = 1,
+            requiredCount = 1,
+            particleMix = ParticleMix(fuseCount = 1),
+        )
+        val particle = engine.snapshot().particles.single()
+
+        engine.tap(particle.position)
+        advanceUntilTriggered(engine)
+
+        var snapshot = engine.snapshot()
+        assertEquals(ParticleType.FUSE, snapshot.particles.single().type)
+        assertTrue(snapshot.particles.single().reactionPending)
+        assertEquals(0.0, snapshot.waves.first { it.sourceType == ParticleType.FUSE }.radius, 0.0)
+
+        repeat(20) { engine.advance(1.0 / 60.0) }
+        snapshot = engine.snapshot()
+        assertTrue(snapshot.particles.single().reactionPending)
+        assertEquals(0.0, snapshot.waves.first { it.sourceType == ParticleType.FUSE }.radius, 0.0)
+
+        repeat(20) { engine.advance(1.0 / 60.0) }
+        snapshot = engine.snapshot()
+        assertFalse(snapshot.particles.single().reactionPending)
+        assertTrue(snapshot.waves.first { it.sourceType == ParticleType.FUSE }.radius > 0.0)
+    }
+
+    @Test
+    fun anchorRemainsStationaryUntilTriggered() {
+        val engine = GameEngine(
+            seed = 93L,
+            particleCount = 1,
+            requiredCount = 1,
+            particleMix = ParticleMix(anchorCount = 1),
+        )
+        val initial = engine.snapshot().particles.single()
+
+        repeat(240) { engine.advance(1.0 / 60.0) }
+
+        val after = engine.snapshot().particles.single()
+        assertEquals(ParticleType.ANCHOR, after.type)
+        assertEquals(initial.position, after.position)
+    }
+
+    @Test
+    fun expandedCampaignHasKnownWinningOpening() {
+        val openings = mapOf(
+            21 to (5 to 2),
+            22 to (1 to 1),
+            23 to (3 to 8),
+            24 to (5 to 6),
+            25 to (3 to 7),
+            26 to (2 to 8),
+            27 to (7 to 3),
+            28 to (5 to 4),
+            29 to (1 to 5),
+            30 to (6 to 6),
+            31 to (3 to 4),
+            32 to (3 to 7),
+            33 to (2 to 3),
+            34 to (2 to 3),
+            35 to (3 to 11),
+            36 to (1 to 4),
+            37 to (3 to 9),
+            38 to (1 to 6),
+            39 to (1 to 10),
+            40 to (4 to 2),
+        )
+
+        for ((levelNumber, grid) in openings) {
+            val level = LevelCatalog.get(levelNumber)
+            val engine = GameEngine(
+                seed = level.seed,
+                particleCount = level.particleCount,
+                requiredCount = level.requiredCount,
+                particleMix = level.particleMix,
+            )
+            val tap = Vec2(
+                x = grid.first / 8.0,
+                y = GameField.DEFAULT.height * grid.second / 13.0,
+            )
+
+            assertTrue(engine.tap(tap))
+            advanceUntilFinished(engine)
+            assertTrue(
+                "Level $levelNumber should have a verified winning opening",
+                engine.snapshot().success,
+            )
+        }
+    }
+
+    @Test
     fun tapFarFromOnlyParticleFails() {
         val engine = GameEngine(seed = 11L, particleCount = 1, requiredCount = 1)
         val snapshot = engine.snapshot()
@@ -131,6 +245,14 @@ class GameEngineTest {
         advanceUntilFinished(engine)
 
         assertTrue(engine.snapshot().finished)
+    }
+
+    private fun advanceUntilTriggered(engine: GameEngine) {
+        repeat(240) {
+            if (engine.snapshot().triggeredCount > 0) return
+            engine.advance(1.0 / 60.0)
+        }
+        assertTrue("Particle was not triggered", engine.snapshot().triggeredCount > 0)
     }
 
     private fun advanceUntilFinished(engine: GameEngine) {

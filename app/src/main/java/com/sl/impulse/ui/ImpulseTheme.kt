@@ -11,6 +11,12 @@ internal val ParticleCore = Color(0xFFB6FCFF)
 internal val ParticleGlow = Color(0xFF00E5FF)
 internal val TriggeredCore = Color(0xFFFFC4FF)
 internal val TriggeredGlow = Color(0xFFB25CFF)
+internal val BoosterCore = Color(0xFFFFB5F6)
+internal val BoosterGlow = Color(0xFFFF3FD4)
+internal val FuseCore = Color(0xFFFFE39A)
+internal val FuseGlow = Color(0xFFFFA928)
+internal val AnchorCore = Color(0xFFD8F3FF)
+internal val AnchorGlow = Color(0xFF4CA6FF)
 internal val NearMiss = Color(0xFFFFC857)
 
 @Composable
