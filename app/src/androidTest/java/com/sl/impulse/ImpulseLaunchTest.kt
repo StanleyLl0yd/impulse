@@ -84,8 +84,19 @@ class ImpulseLaunchTest {
         advanceUntilExists("settings-panel")
         composeRule.onNodeWithTag("sound-toggle").assertExists()
         composeRule.onNodeWithTag("music-toggle").assertExists()
+        composeRule.onNodeWithTag("high-contrast-toggle").assertExists()
         composeRule.onNodeWithTag("haptics-toggle").assertExists()
         composeRule.onNodeWithTag("reduced-effects-toggle").assertExists()
+    }
+
+    @Test
+    fun highContrastCanBeChangedWithoutLeavingGameplay() {
+        enterNewGame()
+        composeRule.onNodeWithTag("settings-button").performClick()
+        advanceUntilExists("high-contrast-toggle")
+        composeRule.onNodeWithTag("high-contrast-toggle").performClick()
+        composeRule.onNodeWithTag("game-canvas").assertExists()
+        composeRule.onNodeWithTag("settings-panel").assertExists()
     }
 
     @Test
