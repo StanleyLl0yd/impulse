@@ -20,107 +20,85 @@ The central rule is: **one tap, one impulse, one chain reaction**.
 ## Platform baseline
 
 - Native Android with Kotlin and Jetpack Compose.
-- Custom lightweight 2D rendering/simulation; no external game engine unless profiling or requirements justify it.
 - `minSdk 26`, `targetSdk 37`, `compileSdk 37`.
 - Permanent Android Application ID / namespace: `com.sl.impulse`.
 - Deterministic fixed-step simulation at 60 Hz with seedable randomness.
-- Interpolated rendering may run at the display refresh rate without changing simulation outcomes.
-- A canonical 9:16 logical playfield keeps gameplay geometry independent from device aspect ratio.
+- Canonical 9:16 logical playfield and interpolated rendering.
 
-## Gameplay entities
+## Gameplay
 
-A particle has position, velocity, radius, type, trigger state and chain depth. A wave has origin, radius, maximum radius, growth rate, chain depth and optional activation delay. A particle can trigger only once per attempt.
+A particle has position, velocity, radius, type, trigger state and chain depth. A wave has origin, radius, growth characteristics, chain depth and optional delay. A particle can trigger only once per attempt.
 
-Particle types:
+Particle types are Standard, Booster, Fuse and Anchor. Level/replay completion remains `triggeredParticles >= requiredTriggeredCount` after all waves expire. The player still receives exactly one impulse per attempt in every mode.
 
-- **Standard** — moving particle with the normal reaction wave.
-- **Booster** — moving particle with a larger, faster reaction wave.
-- **Fuse** — moving particle whose reaction wave starts after a short delay.
-- **Anchor** — stationary particle that acts as a reliable relay point.
+## Campaign
 
-Level completion is based on `triggeredParticles >= requiredTriggeredCount` after all waves expire. If multiple wave fronts reach a particle during the same fixed simulation step, collision ownership uses earliest impact time; equal-time contacts prefer the deeper chain and otherwise preserve deterministic wave order.
+The 0.9.0 build retains the complete **60-level deterministic campaign** across six chapters: Impulse, Momentum, Boost, Control, Resonance and Chaos. Stable seeds, scores, stars, progression, migration from former 20/40-level campaigns and DataStore keys remain compatible with 0.8.0.
 
-## Campaign and progression
+## Replayability
 
-The 0.8.0 campaign contains **60 ordered deterministic levels** arranged into six ten-level chapters:
+### Endless
 
-1. **Impulse** — levels 1–10, core chain-reaction play.
-2. **Momentum** — levels 11–20, denser standard-particle fields.
-3. **Boost** — levels 21–30, Booster reach and Fuse timing.
-4. **Control** — levels 31–40, Anchors and mixed mechanics.
-5. **Resonance** — levels 41–50, denser coordinated mixed fields.
-6. **Chaos** — levels 51–60, full-system combinations.
+Endless reuses the 40 advanced deterministic fields corresponding to campaign levels 21–60 without changing `GameEngine`. A run seed determines an offset and a coprime traversal step, so all 40 fields appear exactly once before a field repeats. Each subsequent 40-round cycle tightens the required activation target, capped below the total particle count. One failed round ends the run. Best completed round and best run score persist locally.
 
-Each level defines a stable seed, particle count, required activation count and optional particle mix. Retrying recreates the same deterministic simulation so improvement comes from timing and placement rather than rerolling the board.
+### Daily Impulse
 
-A successful level unlocks the next level. Each attempt receives a numeric score based on activated particles, chain depth, completion, and activations beyond the minimum target. Successful attempts receive one to three stars: one for completion, two for reaching the bonus threshold, and three for activating every particle.
+Daily Impulse derives an epoch day from the device-local `LocalDate` and deterministically maps that date to one of the 40 advanced fields. The same date therefore produces the same challenge without a server, network clock or backend. Retries are unlimited. Daily best score, best stars and completed-day count persist locally.
 
-Best per-level score, stars, highest unlocked level, selected level, gameplay statistics and Game Feel settings are stored locally through AndroidX DataStore Preferences. Campaign expansion migration recognizes the former final levels 20 and 40 so direct upgrades from older releases retain the correct continuation point.
+### Share Result
+
+Replay result cards expose a user-initiated `ACTION_SEND` text share through the native Android Sharesheet. IMPULSE itself does not gain network access, file access or a new runtime permission; the receiving app controls delivery after the user chooses it.
 
 ## Achievements and statistics
 
-Achievements are derived from local progress and statistics rather than persisted separately. The 0.8.0 catalog contains 21 goals grouped into:
+Achievements are derived from local state rather than stored separately. 0.9.0 contains **25 achievements** in Journey, Mastery, Chain, Endurance and Replay groups. New Replay achievements cover first/seventh completed Daily challenge and five/ten cleared Endless rounds.
 
-- **Journey** — level and chapter completion.
-- **Mastery** — perfect levels, flawless chapters and full perfection.
-- **Chain** — chain depth and reaction-size milestones.
-- **Endurance** — total triggered particles, attempts and successful attempts.
+Replay attempts also feed the existing aggregate attempts, successes, triggered-particle and chain-depth statistics. Replay-specific local statistics include Endless best round/score and number of completed Daily challenges.
 
-The Achievements screen also reports campaign totals, chapter completion/perfection, attempts, wins, success rate, total triggered particles, best chain, best depth and best score.
+## Navigation
 
-No achievement or statistic requires an account, backend or network connection.
+After the branded splash, the main menu exposes Continue, New game, Endless, Daily Impulse, Achievements, About and Exit. Android Back from campaign or replay returns to the menu. Campaign selection remains chapter-aware and isolated from Replay mode state.
 
-## Navigation and local UX
+## Architecture
 
-After the five-second branded launch splash, the app opens the main menu. Continue starts the highest unlocked level. New game starts level 1 without clearing campaign progress, scores, stars, statistics or settings. Achievements opens the local progress/achievement view. About and Exit complete the menu flow, and Android back navigation returns from gameplay or menu subscreens to the main menu.
+- `game/` owns deterministic simulation, campaign definitions and replay challenge generation.
+- `progress/` owns DataStore state, statistics and derived achievements.
+- `ui/` owns Compose screens, rendering and Android Sharesheet integration.
+- Replay challenge generation configures the existing `GameEngine`; it does not fork or duplicate physics.
+- Campaign and replay persistence are additive and device-local.
 
-The Level Picker groups levels by chapter and shows per-level stars while preserving locked/unlocked progression.
+## Quality requirements
+
+- Fixed 60 Hz deterministic simulation across modes.
+- Stable Daily challenge for a given local date.
+- Endless traversal must cover all 40 replay fields before repeating.
+- Endless challenge definitions must remain structurally valid while targets escalate.
+- Campaign deterministic regression coverage remains unchanged.
+- Unit-test replay generation and achievements.
+- Runtime-test main-menu replay navigation on API 37.
+- Run Android lint, debug/release builds, CodeQL, Semgrep and Gitleaks in CI.
+- No unnecessary permissions, SDKs, exported components or cleartext network traffic.
 
 ## Version direction
 
-### 0.8.0 · Content
+### 0.9.0 · Replayability
 
-- 60 deterministic levels.
-- Six chapters.
-- Full local achievement catalog.
-- Chapter-aware campaign UI.
-- Existing progress preserved across prior campaign boundaries.
-
-### 0.9.0
-
-- Endless mode using deterministic procedural generation.
-- Daily Impulse using a local date-derived seed.
-- Share Result through the Android Sharesheet without adding `INTERNET` permission.
+- Endless.
+- Daily Impulse.
+- Share Result.
+- Replay statistics and achievements.
 
 ### 1.0.0
 
-- Final balance pass across all 60 levels.
+- Final balance pass across campaign and replay modes.
 - Audiovisual polish and game-feel tuning.
 - Dedicated accessibility pass.
 - Regression hardening and production release validation.
 
-## Architecture
-
-Gameplay logic belongs under `game/` and must not depend on Compose drawing decisions. Rendering reads game snapshots. Level and chapter definitions live in deterministic catalogs and configure the engine without moving campaign state into simulation code. Achievement conditions are data-driven and derived from progress/statistics. Persistence belongs outside the engine and uses DataStore.
-
-The simulation uses canonical logical coordinates. UI maps that field to the available canvas with uniform scale and letterboxing when necessary; taps outside the logical playfield do not affect gameplay.
-
-## Quality requirements
-
-- Fixed 60 Hz simulation with smooth interpolated rendering on 60/90/120/144 Hz displays.
-- Identical logical gameplay geometry and seeded outcomes across device aspect ratios.
-- Deterministic retry for every campaign level.
-- Verified winning-opening regression coverage for expanded campaign content.
-- Avoid per-frame allocation pressure where practical.
-- Unit-test gameplay rules, content catalogs, achievements, scoring/progression, field geometry and viewport mapping.
-- Run Android lint and debug/release builds in CI.
-- Runtime-test launch, navigation, chapter-aware level selection, achievements/About, settings, and tap-result-retry flows.
-- No unnecessary permissions, SDKs, dependencies, exported components or cleartext network traffic.
-
 ## Repository policy
 
-`main` is protected, PR-based and squash-only. CI must pass before merge. GitHub Actions are pinned to immutable commit SHAs. Dependency, static-analysis and secret-scanning automation is part of the baseline.
+`main` is protected, PR-based and squash-only. CI must pass before merge. GitHub Actions are pinned to immutable commit SHAs. Dependency, static-analysis and secret-scanning automation remains part of the baseline.
 
 ## Release policy
 
-Official releases are tag-driven and must match `versionName`. The release signing key is supplied by the repository owner; the repository does not generate or contain it. CI restores the key only into runner temporary storage, signs APK/AAB, verifies both artifacts and the expected certificate fingerprint, generates SHA-256 checksums and provenance attestations, publishes the GitHub Release, then removes temporary signing material.
+Official releases are tag-driven and must match `versionName`. CI validates the tagged `main` commit, restores the owner-provided signing key only in protected runner storage, signs and verifies APK/AAB, generates SHA-256 checksums and provenance attestations, publishes the GitHub Release, then removes temporary signing material.
