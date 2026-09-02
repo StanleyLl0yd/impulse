@@ -11,6 +11,14 @@ data class ProgressState(
 
     fun stars(levelNumber: Int): Int = bestStars[levelNumber] ?: 0
 
+    fun completedLevels(levels: IntRange): Int = levels.count { stars(it) > 0 }
+
+    fun perfectLevels(levels: IntRange): Int = levels.count { stars(it) == 3 }
+
+    fun isCompleted(levels: IntRange): Boolean = completedLevels(levels) == levels.count()
+
+    fun isPerfect(levels: IntRange): Boolean = perfectLevels(levels) == levels.count()
+
     val totalStars: Int
         get() = bestStars.values.sum()
 
@@ -75,18 +83,14 @@ internal fun calculateStatisticsUpdate(
 
 internal fun expandedCampaignHighestUnlocked(
     storedHighestUnlocked: Int,
-    previousFinalLevel: Int,
-    previousFinalStars: Int,
+    completedPreviousFinalLevels: Set<Int>,
     totalLevels: Int,
 ): Int {
-    val stored = storedHighestUnlocked.coerceIn(1, totalLevels)
-    return if (
-        totalLevels > previousFinalLevel &&
-        stored == previousFinalLevel &&
-        previousFinalStars > 0
-    ) {
-        previousFinalLevel + 1
-    } else {
-        stored
+    var highestUnlocked = storedHighestUnlocked.coerceIn(1, totalLevels)
+    for (previousFinalLevel in completedPreviousFinalLevels.sorted()) {
+        if (totalLevels > previousFinalLevel && highestUnlocked == previousFinalLevel) {
+            highestUnlocked = previousFinalLevel + 1
+        }
     }
+    return highestUnlocked
 }
