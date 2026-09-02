@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sl.impulse.R
 import com.sl.impulse.game.LevelCatalog
+import com.sl.impulse.progress.AchievementCatalog
+import com.sl.impulse.progress.AchievementGroup
 import com.sl.impulse.progress.PlayerState
 import com.sl.impulse.progress.ProgressState
 
@@ -127,6 +129,7 @@ fun AchievementsScreen(
     val progress = playerState.progress
     val statistics = playerState.statistics
     val totalLevels = LevelCatalog.levels.size
+    val achievements = AchievementCatalog.evaluate(playerState)
 
     MenuBackground {
         MenuPanel(
@@ -168,6 +171,32 @@ fun AchievementsScreen(
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
             )
+            Text(
+                text = stringResource(
+                    R.string.achievements_unlocked,
+                    achievements.count { it.unlocked },
+                    achievements.size,
+                ),
+                color = NearMiss.copy(alpha = 0.86f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("achievements-unlocked"),
+            )
+
+            SectionTitle(stringResource(R.string.achievements_chapters_section))
+            LevelCatalog.chapters.forEach { chapter ->
+                StatRow(
+                    label = stringResource(chapterNameRes(chapter.id)),
+                    value = stringResource(
+                        R.string.chapter_progress,
+                        progress.completedLevels(chapter.levels),
+                        chapter.levels.count(),
+                        progress.perfectLevels(chapter.levels),
+                    ),
+                    testTag = "chapter-progress-${chapter.number}",
+                )
+            }
 
             SectionTitle(stringResource(R.string.achievements_statistics_section))
             StatRow(
@@ -201,35 +230,15 @@ fun AchievementsScreen(
                 value = progress.bestOverallScore.toString(),
             )
 
-            SectionTitle(stringResource(R.string.achievements_milestones_section))
-            AchievementRow(
-                title = stringResource(R.string.achievement_first_impulse),
-                unlocked = progress.completedLevels >= 1,
-            )
-            AchievementRow(
-                title = stringResource(R.string.achievement_perfect_chain),
-                unlocked = progress.perfectLevels >= 1,
-            )
-            AchievementRow(
-                title = stringResource(R.string.achievement_deep_impact),
-                unlocked = statistics.bestChainDepth >= 10,
-            )
-            AchievementRow(
-                title = stringResource(R.string.achievement_chain_reaction),
-                unlocked = statistics.bestTriggeredCount >= 30,
-            )
-            AchievementRow(
-                title = stringResource(R.string.achievement_unstoppable),
-                unlocked = progress.perfectLevels >= 10,
-            )
-            AchievementRow(
-                title = stringResource(R.string.achievement_master),
-                unlocked = progress.stars(totalLevels) > 0,
-            )
-            AchievementRow(
-                title = stringResource(R.string.achievement_perfectionist),
-                unlocked = progress.perfectLevels == totalLevels,
-            )
+            AchievementGroup.entries.forEach { group ->
+                SectionTitle(stringResource(achievementGroupTitleRes(group)))
+                achievements.filter { it.group == group }.forEach { achievement ->
+                    AchievementRow(
+                        title = stringResource(achievementTitleRes(achievement.id)),
+                        unlocked = achievement.unlocked,
+                    )
+                }
+            }
         }
     }
 }
