@@ -33,8 +33,6 @@ import com.sl.impulse.game.LevelCatalog
 import com.sl.impulse.game.LevelDefinition
 import com.sl.impulse.progress.ProgressState
 
-private val LevelRows = LevelCatalog.levels.chunked(4)
-
 @Composable
 internal fun SettingsPanel(
     soundEnabled: Boolean,
@@ -147,48 +145,28 @@ internal fun LevelPicker(
                 fontSize = 13.sp,
             )
 
-            LevelRows.forEach { rowLevels ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    rowLevels.forEach { level ->
-                        val unlocked = progress.isUnlocked(level.number)
-                        val selected = level.number == selectedLevel
-                        val stars = progress.stars(level.number)
-                        Button(
-                            onClick = { onSelectLevel(level.number) },
-                            enabled = unlocked,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selected) TriggeredGlow else Color(0xFF15203A),
-                                contentColor = Color.White,
-                                disabledContainerColor = Color(0xFF090D19),
-                                disabledContentColor = Color.White.copy(alpha = 0.24f),
-                            ),
-                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("level-${level.number}"),
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = level.number.toString().padStart(2, '0'),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                )
-                                if (unlocked) {
-                                    Text(
-                                        text = starRating(stars),
-                                        color = if (stars > 0) TriggeredCore else Color.White.copy(alpha = 0.28f),
-                                        fontSize = 10.sp,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    repeat(4 - rowLevels.size) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
+            LevelCatalog.chapters.forEach { chapter ->
+                Text(
+                    text = stringResource(
+                        R.string.chapter_label,
+                        chapter.number,
+                        stringResource(chapterNameRes(chapter.id)),
+                    ),
+                    color = ParticleCore.copy(alpha = 0.72f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.2.sp,
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .testTag("chapter-${chapter.number}"),
+                )
+                chapter.levels.map(LevelCatalog::get).chunked(4).forEach { rowLevels ->
+                    LevelRow(
+                        levels = rowLevels,
+                        selectedLevel = selectedLevel,
+                        progress = progress,
+                        onSelectLevel = onSelectLevel,
+                    )
                 }
             }
 
@@ -200,6 +178,57 @@ internal fun LevelPicker(
                     fontSize = 12.sp,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun LevelRow(
+    levels: List<LevelDefinition>,
+    selectedLevel: Int,
+    progress: ProgressState,
+    onSelectLevel: (Int) -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        levels.forEach { level ->
+            val unlocked = progress.isUnlocked(level.number)
+            val selected = level.number == selectedLevel
+            val stars = progress.stars(level.number)
+            Button(
+                onClick = { onSelectLevel(level.number) },
+                enabled = unlocked,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selected) TriggeredGlow else Color(0xFF15203A),
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFF090D19),
+                    disabledContentColor = Color.White.copy(alpha = 0.24f),
+                ),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("level-${level.number}"),
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = level.number.toString().padStart(2, '0'),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                    )
+                    if (unlocked) {
+                        Text(
+                            text = starRating(stars),
+                            color = if (stars > 0) TriggeredCore else Color.White.copy(alpha = 0.28f),
+                            fontSize = 10.sp,
+                        )
+                    }
+                }
+            }
+        }
+        repeat(4 - levels.size) {
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
@@ -221,6 +250,8 @@ internal fun GameHint(
         level.number == 26 && progress.highestUnlockedLevel == 26 -> R.string.mechanic_fuse
         level.number == 31 && progress.highestUnlockedLevel == 31 -> R.string.mechanic_anchor
         level.number == 36 && progress.highestUnlockedLevel == 36 -> R.string.mechanic_mix
+        level.number == 41 && progress.highestUnlockedLevel == 41 -> R.string.content_resonance
+        level.number == 51 && progress.highestUnlockedLevel == 51 -> R.string.content_chaos
         else -> null
     }
     val hintText = tutorialText ?: mechanicText
