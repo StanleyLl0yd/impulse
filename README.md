@@ -22,7 +22,7 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **0.9.0** (`versionCode 11`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **1.0.0** (`versionCode 12`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
@@ -48,9 +48,10 @@ Current source version: **0.9.0** (`versionCode 11`) · Min SDK: **26 (Android 8
 - **Share Result** through the native Android Sharesheet with no network permission
 - **25 local achievements** across Journey, Mastery, Chain, Endurance, and Replay
 - Local statistics for campaign and replay attempts, wins, triggered particles, best chain and depth
+- Fully offline **adaptive procedural ambient music** that subtly reacts to chain depth
+- Sound, haptics, Reduced Effects, and persistent **High Contrast** accessibility controls
 - Local persistence through AndroidX DataStore
 - Deterministic fixed-step 60 Hz simulation and instant retries
-- Layered neon waves, trails, activation flashes, sound, haptics, and reduced-effects setting
 - English and Russian interface resources
 - Portrait-first Android experience
 - No account, backend, analytics, ads, cloud dependency, or `INTERNET` permission
@@ -76,9 +77,13 @@ Levels use stable seeds, so retries reproduce the same logical challenge. Expand
 
 Replay result cards can be sent to any compatible app through Android's native Sharesheet. Sharing is user-initiated and does not require IMPULSE itself to have network access.
 
-## 🎮 Game feel
+## 🎮 Game feel and accessibility
 
-IMPULSE is designed around clarity and escalation rather than visual noise. Cool cyan idle particles, a single cyan player impulse, pink Boosters, gold Fuses, blue Anchors and neon reaction feedback make propagation readable without changing the deterministic simulation. Results surface chain size, target, depth, score and relevant mode progress immediately.
+IMPULSE is designed around clarity and escalation rather than visual noise. Cool cyan idle particles, a single cyan player impulse, pink Boosters, gold Fuses, blue Anchors and neon reaction feedback make propagation readable without changing the deterministic simulation.
+
+The adaptive ambient layer is generated locally at runtime: a calm low-register pad stays unobtrusive while a subtle harmonic layer rises with deeper reactions. It stops outside active gameplay and can be disabled independently from sound effects.
+
+Reduced Effects lowers visual intensity while preserving gameplay information. High Contrast adds a stronger field boundary, brighter wave and particle outlines, and thicker shape markers so Booster, Fuse, and Anchor mechanics remain readable without relying on color alone.
 
 Rendering can run at the display refresh rate while gameplay remains deterministic through a fixed 60 Hz simulation.
 
@@ -139,6 +144,7 @@ See [docs/RELEASE.md](docs/RELEASE.md).
 - No account, analytics, tracking, advertising, or backend
 - Campaign/replay progress, statistics, achievements, and settings stay on the device
 - Daily Impulse uses only the device-local calendar date
+- Adaptive music is synthesized entirely on-device
 - Sharing is explicitly initiated through the Android Sharesheet
 - No dangerous Android runtime permissions in the current scope
 
@@ -149,8 +155,9 @@ See [docs/RELEASE.md](docs/RELEASE.md).
 
 ## 🗺 Roadmap
 
-- **0.9.0 · Replayability:** Endless, Daily Impulse, Share Result
-- **1.0.0:** final campaign/replay balance, audiovisual polish, dedicated accessibility pass, regression hardening, production release
+The original 1.0 roadmap is complete: Campaign, special particles, chapters and achievements, Replayability, adaptive audiovisual polish, accessibility controls, regression hardening, and production release readiness are all implemented.
+
+Future updates can focus on additional content and polish without changing the one-tap core.
 
 The product direction is tracked in [PROJECT.md](PROJECT.md).
 
