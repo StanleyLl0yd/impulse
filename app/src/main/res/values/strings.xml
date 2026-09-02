@@ -37,6 +37,11 @@
     <string name="tutorial_level_1">Tap once. Your only impulse starts the reaction.</string>
     <string name="tutorial_level_2">Triggered particles create new waves. Choose the moment that links the biggest group.</string>
     <string name="tutorial_level_3">Reach the target to pass. Trigger more particles for 2 stars, or every particle for 3.</string>
+    <string name="mechanic_title">NEW MECHANIC</string>
+    <string name="mechanic_booster">Pink Boosters emit a larger wave when triggered.</string>
+    <string name="mechanic_fuse">Gold Fuses pause briefly before their reaction wave expands.</string>
+    <string name="mechanic_anchor">Blue Anchors stay fixed, giving the chain reliable relay points.</string>
+    <string name="mechanic_mix">Boosters, Fuses, and Anchors now share the field. Use their reach, timing, and fixed positions together.</string>
     <string name="chain_depth">DEPTH %1$d</string>
     <string name="retry">Again</string>
     <string name="next_level">Next level</string>
