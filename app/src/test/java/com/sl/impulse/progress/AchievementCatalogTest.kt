@@ -9,13 +9,12 @@ class AchievementCatalogTest {
     @Test
     fun newPlayerStartsWithAllAchievementsLocked() {
         val achievements = AchievementCatalog.evaluate(PlayerState())
-
-        assertEquals(21, achievements.size)
+        assertEquals(25, achievements.size)
         assertTrue(achievements.none { it.unlocked })
     }
 
     @Test
-    fun completePerfectCampaignWithStrongStatisticsUnlocksEverything() {
+    fun completePerfectCampaignAndReplayProgressUnlocksEverything() {
         val state = PlayerState(
             progress = ProgressState(
                 highestUnlockedLevel = 60,
@@ -29,28 +28,24 @@ class AchievementCatalogTest {
                 bestTriggeredCount = 50,
                 bestChainDepth = 15,
             ),
+            replay = ReplayProgress(endlessBestRound = 10, endlessBestScore = 25_000, dailyCompletedDays = 7),
         )
-
         val achievements = AchievementCatalog.evaluate(state)
-
-        assertEquals(21, achievements.size)
+        assertEquals(25, achievements.size)
         assertTrue(achievements.all { it.unlocked })
     }
 
     @Test
     fun completingFirstChapterDoesNotUnlockLaterJourneyAchievements() {
         val state = PlayerState(
-            progress = ProgressState(
-                highestUnlockedLevel = 11,
-                bestStars = (1..10).associateWith { 1 },
-            ),
+            progress = ProgressState(highestUnlockedLevel = 11, bestStars = (1..10).associateWith { 1 }),
         )
         val achievements = AchievementCatalog.evaluate(state).associateBy { it.id }
-
         assertTrue(requireNotNull(achievements[AchievementId.FIRST_IMPULSE]).unlocked)
         assertTrue(requireNotNull(achievements[AchievementId.TEN_LEVELS]).unlocked)
         assertTrue(requireNotNull(achievements[AchievementId.CHAPTER_IMPULSE]).unlocked)
         assertFalse(requireNotNull(achievements[AchievementId.HALFWAY]).unlocked)
         assertFalse(requireNotNull(achievements[AchievementId.MASTER]).unlocked)
+        assertFalse(requireNotNull(achievements[AchievementId.DAILY_IMPULSE]).unlocked)
     }
 }

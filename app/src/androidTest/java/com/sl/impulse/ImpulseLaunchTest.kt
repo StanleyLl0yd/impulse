@@ -18,26 +18,41 @@ class ImpulseLaunchTest {
         finishSplash()
         composeRule.onNodeWithTag("menu-continue").assertExists()
         composeRule.onNodeWithTag("menu-new-game").assertExists()
+        composeRule.onNodeWithTag("menu-endless").assertExists()
+        composeRule.onNodeWithTag("menu-daily").assertExists()
         composeRule.onNodeWithTag("menu-achievements").assertExists()
         composeRule.onNodeWithTag("menu-about").assertExists()
         composeRule.onNodeWithTag("menu-exit").assertExists()
     }
 
     @Test
+    fun replayModesOpenDeterministicGameSurface() {
+        finishSplash()
+        composeRule.onNodeWithTag("menu-endless").performClick()
+        advanceUntilExists("game-canvas")
+        composeRule.onNodeWithTag("replay-mode").assertExists()
+        pressBack()
+        advanceUntilExists("menu-daily")
+        composeRule.onNodeWithTag("menu-daily").performClick()
+        advanceUntilExists("game-canvas")
+        composeRule.onNodeWithTag("replay-mode").assertExists()
+    }
+
+    @Test
     fun achievementsAndAboutAreAvailable() {
         finishSplash()
-
         composeRule.onNodeWithTag("menu-achievements").performClick()
         advanceUntilExists("achievements-screen")
         composeRule.onNodeWithTag("achievements-level").assertExists()
         composeRule.onNodeWithTag("achievements-stars").assertExists()
         composeRule.onNodeWithTag("achievements-unlocked").assertExists()
         composeRule.onNodeWithTag("chapter-progress-1").assertExists()
+        composeRule.onNodeWithTag("statistics-endless-round").assertExists()
+        composeRule.onNodeWithTag("statistics-daily-days").assertExists()
         composeRule.onNodeWithTag("statistics-attempts").assertExists()
         composeRule.onNodeWithTag("statistics-best-chain").assertExists()
         pressBack()
         advanceUntilExists("menu-about")
-
         composeRule.onNodeWithTag("menu-about").performClick()
         advanceUntilExists("about-screen")
     }
@@ -54,7 +69,6 @@ class ImpulseLaunchTest {
     @Test
     fun levelPickerShowsSixChapterCampaign() {
         enterNewGame()
-
         composeRule.onNodeWithTag("level-button").performClick()
         advanceUntilExists("level-picker")
         composeRule.onNodeWithTag("chapter-1").assertExists()
@@ -66,7 +80,6 @@ class ImpulseLaunchTest {
     @Test
     fun gameFeelSettingsAreAvailable() {
         enterNewGame()
-
         composeRule.onNodeWithTag("settings-button").performClick()
         advanceUntilExists("settings-panel")
         composeRule.onNodeWithTag("sound-toggle").assertExists()
@@ -77,17 +90,14 @@ class ImpulseLaunchTest {
     @Test
     fun tapResultAndRetryFlowWorks() {
         enterNewGame()
-
         composeRule.onNodeWithTag("game-canvas").performTouchInput { click() }
         composeRule.mainClock.advanceTimeBy(100)
         composeRule.onNodeWithTag("game-hint").assertDoesNotExist()
-
         composeRule.mainClock.advanceTimeBy(12_000)
         composeRule.onNodeWithTag("result").assertExists()
         composeRule.onNodeWithTag("result-chain").assertExists()
         composeRule.onNodeWithTag("result-score").assertExists()
         composeRule.onNodeWithTag("result-depth").assertExists()
-
         composeRule.onNodeWithTag("retry").performClick()
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithTag("game-hint").assertExists()
@@ -108,12 +118,7 @@ class ImpulseLaunchTest {
     private fun advanceUntilExists(tag: String) {
         repeat(120) {
             composeRule.mainClock.advanceTimeByFrame()
-            if (runCatching {
-                    composeRule.onNodeWithTag(tag).assertExists()
-                }.isSuccess
-            ) {
-                return
-            }
+            if (runCatching { composeRule.onNodeWithTag(tag).assertExists() }.isSuccess) return
             Thread.sleep(10)
         }
         composeRule.onNodeWithTag(tag).assertExists()
