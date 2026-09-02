@@ -73,6 +73,7 @@ internal fun ImpulseGame(
             seed = level.seed,
             particleCount = level.particleCount,
             requiredCount = level.requiredCount,
+            particleMix = level.particleMix,
         )
     }
     val previousBestScore = remember(engine) { playerState.progress.bestScore(level.number) }
