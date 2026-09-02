@@ -72,3 +72,21 @@ internal fun calculateStatisticsUpdate(
     bestTriggeredCount = maxOf(current.bestTriggeredCount, triggeredCount),
     bestChainDepth = maxOf(current.bestChainDepth, maximumChainDepth),
 )
+
+internal fun expandedCampaignHighestUnlocked(
+    storedHighestUnlocked: Int,
+    previousFinalLevel: Int,
+    previousFinalStars: Int,
+    totalLevels: Int,
+): Int {
+    val stored = storedHighestUnlocked.coerceIn(1, totalLevels)
+    return if (
+        totalLevels > previousFinalLevel &&
+        stored == previousFinalLevel &&
+        previousFinalStars > 0
+    ) {
+        previousFinalLevel + 1
+    } else {
+        stored
+    }
+}
