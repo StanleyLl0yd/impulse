@@ -76,7 +76,7 @@ fun ImpulseRoot(onExit: () -> Unit = {}) {
             )
 
             RootScreen.Achievements -> AchievementsScreen(
-                progress = playerState.progress,
+                playerState = playerState,
                 onBack = showMenu,
             )
 

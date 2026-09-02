@@ -13,6 +13,26 @@ data class ProgressState(
 
     val totalStars: Int
         get() = bestStars.values.sum()
+
+    val completedLevels: Int
+        get() = bestStars.values.count { it > 0 }
+
+    val perfectLevels: Int
+        get() = bestStars.values.count { it == 3 }
+
+    val bestOverallScore: Int
+        get() = bestScores.values.maxOrNull() ?: 0
+}
+
+data class PlayerStatistics(
+    val totalAttempts: Int = 0,
+    val successfulAttempts: Int = 0,
+    val totalTriggeredParticles: Int = 0,
+    val bestTriggeredCount: Int = 0,
+    val bestChainDepth: Int = 0,
+) {
+    val successRatePercent: Int
+        get() = if (totalAttempts == 0) 0 else successfulAttempts * 100 / totalAttempts
 }
 
 internal data class ProgressUpdate(
@@ -38,4 +58,17 @@ internal fun calculateProgressUpdate(
     },
     bestScore = maxOf(currentBestScore, score),
     bestStars = maxOf(currentBestStars, stars),
+)
+
+internal fun calculateStatisticsUpdate(
+    current: PlayerStatistics,
+    triggeredCount: Int,
+    maximumChainDepth: Int,
+    success: Boolean,
+): PlayerStatistics = PlayerStatistics(
+    totalAttempts = current.totalAttempts + 1,
+    successfulAttempts = current.successfulAttempts + if (success) 1 else 0,
+    totalTriggeredParticles = current.totalTriggeredParticles + triggeredCount,
+    bestTriggeredCount = maxOf(current.bestTriggeredCount, triggeredCount),
+    bestChainDepth = maxOf(current.bestChainDepth, maximumChainDepth),
 )

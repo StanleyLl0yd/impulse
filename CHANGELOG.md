@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.6.0 - 2026-09-02
+
+### Added
+
+- Contextual onboarding across the first three campaign levels, introducing the one-tap rule, chain propagation, targets, and star goals without adding a separate tutorial mode.
+- Persistent local gameplay statistics for attempts, successful attempts, total triggered particles, best chain size, and best chain depth.
+- Expanded Achievements with completed levels, perfect levels, best score, success rate, gameplay statistics, and seven local milestone achievements.
+- Enhanced result panel with full chain size, target, depth, score, and new-best feedback.
+- Unit and Android runtime coverage for the new statistics and result UI.
+
+### Changed
+
+- Tutorial hints automatically disappear as each introductory level is completed, so existing players who already progressed past the first levels are not forced through onboarding again.
+- Gameplay panels were separated from the game host to keep UI orchestration focused and maintainable.
+- Android version is now 0.6.0 with `versionCode 7`.
+
 ## 0.5.0 - 2026-09-01
 
 ### Added

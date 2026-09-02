@@ -69,9 +69,38 @@ class ProgressStateTest {
     }
 
     @Test
-    fun totalStarsSumsStoredBestResults() {
-        val progress = ProgressState(bestStars = mapOf(1 to 2, 2 to 3, 4 to 1))
+    fun progressSummariesUseStoredBestResults() {
+        val progress = ProgressState(
+            bestScores = mapOf(1 to 1200, 2 to 900, 4 to 1400),
+            bestStars = mapOf(1 to 2, 2 to 3, 4 to 1),
+        )
 
         assertEquals(6, progress.totalStars)
+        assertEquals(3, progress.completedLevels)
+        assertEquals(1, progress.perfectLevels)
+        assertEquals(1400, progress.bestOverallScore)
+    }
+
+    @Test
+    fun statisticsAccumulateAttemptsAndKeepPeaks() {
+        val first = calculateStatisticsUpdate(
+            current = PlayerStatistics(),
+            triggeredCount = 18,
+            maximumChainDepth = 6,
+            success = true,
+        )
+        val second = calculateStatisticsUpdate(
+            current = first,
+            triggeredCount = 11,
+            maximumChainDepth = 4,
+            success = false,
+        )
+
+        assertEquals(2, second.totalAttempts)
+        assertEquals(1, second.successfulAttempts)
+        assertEquals(29, second.totalTriggeredParticles)
+        assertEquals(18, second.bestTriggeredCount)
+        assertEquals(6, second.bestChainDepth)
+        assertEquals(50, second.successRatePercent)
     }
 }

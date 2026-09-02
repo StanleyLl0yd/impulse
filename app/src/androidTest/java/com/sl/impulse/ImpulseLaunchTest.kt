@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.test.espresso.Espresso.pressBack
 import org.junit.Rule
 import org.junit.Test
 
@@ -30,7 +31,9 @@ class ImpulseLaunchTest {
         advanceUntilExists("achievements-screen")
         composeRule.onNodeWithTag("achievements-level").assertExists()
         composeRule.onNodeWithTag("achievements-stars").assertExists()
-        composeRule.onNodeWithTag("menu-back").performClick()
+        composeRule.onNodeWithTag("statistics-attempts").assertExists()
+        composeRule.onNodeWithTag("statistics-best-chain").assertExists()
+        pressBack()
         advanceUntilExists("menu-about")
 
         composeRule.onNodeWithTag("menu-about").performClick()
@@ -77,7 +80,9 @@ class ImpulseLaunchTest {
 
         composeRule.mainClock.advanceTimeBy(12_000)
         composeRule.onNodeWithTag("result").assertExists()
+        composeRule.onNodeWithTag("result-chain").assertExists()
         composeRule.onNodeWithTag("result-score").assertExists()
+        composeRule.onNodeWithTag("result-depth").assertExists()
 
         composeRule.onNodeWithTag("retry").performClick()
         composeRule.mainClock.advanceTimeByFrame()
