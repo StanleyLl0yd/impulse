@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
@@ -32,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sl.impulse.R
 import com.sl.impulse.game.LevelCatalog
+import com.sl.impulse.progress.PlayerState
 import com.sl.impulse.progress.ProgressState
 
 @Composable
@@ -117,23 +121,28 @@ fun MainMenuScreen(
 
 @Composable
 fun AchievementsScreen(
-    progress: ProgressState,
+    playerState: PlayerState,
     onBack: () -> Unit,
 ) {
+    val progress = playerState.progress
+    val statistics = playerState.statistics
+    val totalLevels = LevelCatalog.levels.size
+
     MenuBackground {
         MenuPanel(
             title = stringResource(R.string.achievements_title),
             testTag = "achievements-screen",
             onBack = onBack,
         ) {
+            SectionTitle(stringResource(R.string.achievements_progress_section))
             Text(
                 text = stringResource(
                     R.string.achievements_level,
-                    progress.highestUnlockedLevel,
-                    LevelCatalog.levels.size,
+                    progress.completedLevels,
+                    totalLevels,
                 ),
                 color = Color.White,
-                fontSize = 24.sp,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag("achievements-level"),
@@ -142,12 +151,84 @@ fun AchievementsScreen(
                 text = stringResource(
                     R.string.achievements_stars,
                     progress.totalStars,
-                    LevelCatalog.levels.size * 3,
+                    totalLevels * 3,
                 ),
                 color = ParticleCore.copy(alpha = 0.82f),
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag("achievements-stars"),
+            )
+            Text(
+                text = stringResource(
+                    R.string.achievements_perfect_levels,
+                    progress.perfectLevels,
+                    totalLevels,
+                ),
+                color = TriggeredCore.copy(alpha = 0.76f),
+                fontSize = 13.sp,
+                textAlign = TextAlign.Center,
+            )
+
+            SectionTitle(stringResource(R.string.achievements_statistics_section))
+            StatRow(
+                label = stringResource(R.string.statistics_attempts),
+                value = statistics.totalAttempts.toString(),
+                testTag = "statistics-attempts",
+            )
+            StatRow(
+                label = stringResource(R.string.statistics_successes),
+                value = statistics.successfulAttempts.toString(),
+            )
+            StatRow(
+                label = stringResource(R.string.statistics_success_rate),
+                value = "${statistics.successRatePercent}%",
+            )
+            StatRow(
+                label = stringResource(R.string.statistics_total_triggered),
+                value = statistics.totalTriggeredParticles.toString(),
+            )
+            StatRow(
+                label = stringResource(R.string.statistics_best_chain),
+                value = statistics.bestTriggeredCount.toString(),
+                testTag = "statistics-best-chain",
+            )
+            StatRow(
+                label = stringResource(R.string.statistics_best_depth),
+                value = statistics.bestChainDepth.toString(),
+            )
+            StatRow(
+                label = stringResource(R.string.statistics_best_score),
+                value = progress.bestOverallScore.toString(),
+            )
+
+            SectionTitle(stringResource(R.string.achievements_milestones_section))
+            AchievementRow(
+                title = stringResource(R.string.achievement_first_impulse),
+                unlocked = progress.completedLevels >= 1,
+            )
+            AchievementRow(
+                title = stringResource(R.string.achievement_perfect_chain),
+                unlocked = progress.perfectLevels >= 1,
+            )
+            AchievementRow(
+                title = stringResource(R.string.achievement_deep_impact),
+                unlocked = statistics.bestChainDepth >= 10,
+            )
+            AchievementRow(
+                title = stringResource(R.string.achievement_chain_reaction),
+                unlocked = statistics.bestTriggeredCount >= 30,
+            )
+            AchievementRow(
+                title = stringResource(R.string.achievement_unstoppable),
+                unlocked = progress.perfectLevels >= 10,
+            )
+            AchievementRow(
+                title = stringResource(R.string.achievement_master),
+                unlocked = progress.stars(totalLevels) > 0,
+            )
+            AchievementRow(
+                title = stringResource(R.string.achievement_perfectionist),
+                unlocked = progress.perfectLevels == totalLevels,
             )
         }
     }
@@ -175,6 +256,69 @@ fun AboutScreen(onBack: () -> Unit) {
                 textAlign = TextAlign.Center,
             )
         }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        color = TriggeredGlow,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.5.sp,
+        modifier = Modifier.padding(top = 4.dp),
+    )
+}
+
+@Composable
+private fun StatRow(
+    label: String,
+    value: String,
+    testTag: String? = null,
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (testTag == null) Modifier else Modifier.testTag(testTag)),
+    ) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.68f),
+            fontSize = 13.sp,
+        )
+        Text(
+            text = value,
+            color = ParticleCore,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun AchievementRow(
+    title: String,
+    unlocked: Boolean,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = if (unlocked) "✓" else "○",
+            color = if (unlocked) TriggeredCore else Color.White.copy(alpha = 0.24f),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = title,
+            color = if (unlocked) Color.White.copy(alpha = 0.86f) else Color.White.copy(alpha = 0.38f),
+            fontSize = 13.sp,
+        )
     }
 }
 
@@ -237,14 +381,16 @@ private fun MenuPanel(
         color = PanelBackground.copy(alpha = 0.97f),
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier
-            .padding(horizontal = 24.dp)
+            .padding(horizontal = 24.dp, vertical = 18.dp)
             .widthIn(max = 380.dp)
             .testTag(testTag),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp),
-            modifier = Modifier.padding(horizontal = 26.dp, vertical = 26.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier
+                .padding(horizontal = 26.dp, vertical = 24.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             Text(
                 text = title,
