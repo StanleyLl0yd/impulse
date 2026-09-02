@@ -1,15 +1,38 @@
 package com.sl.impulse.game
 
+enum class ParticleType {
+    STANDARD,
+    BOOSTER,
+    FUSE,
+    ANCHOR,
+}
+
+data class ParticleMix(
+    val boosterCount: Int = 0,
+    val fuseCount: Int = 0,
+    val anchorCount: Int = 0,
+) {
+    init {
+        require(boosterCount >= 0)
+        require(fuseCount >= 0)
+        require(anchorCount >= 0)
+    }
+
+    val specialCount: Int = boosterCount + fuseCount + anchorCount
+}
+
 data class LevelDefinition(
     val number: Int,
     val seed: Long,
     val particleCount: Int,
     val requiredCount: Int,
+    val particleMix: ParticleMix = ParticleMix(),
 ) {
     init {
         require(number > 0)
         require(particleCount > 0)
         require(requiredCount in 1 until particleCount)
+        require(particleMix.specialCount <= particleCount)
     }
 
     val twoStarThreshold: Int = requiredCount + ((particleCount - requiredCount) + 1) / 2
@@ -38,6 +61,26 @@ object LevelCatalog {
         LevelDefinition(18, 0x1118L, 34, 25),
         LevelDefinition(19, 0x1119L, 36, 26),
         LevelDefinition(20, 0x1120L, 36, 27),
+        LevelDefinition(21, 0x1121L, 38, 28, ParticleMix(boosterCount = 2)),
+        LevelDefinition(22, 0x1122L, 38, 29, ParticleMix(boosterCount = 3)),
+        LevelDefinition(23, 0x1123L, 40, 29, ParticleMix(boosterCount = 4)),
+        LevelDefinition(24, 0x1124L, 40, 30, ParticleMix(boosterCount = 4)),
+        LevelDefinition(25, 0x1125L, 42, 31, ParticleMix(boosterCount = 5)),
+        LevelDefinition(26, 0x1126L, 40, 29, ParticleMix(fuseCount = 2)),
+        LevelDefinition(27, 0x1127L, 40, 30, ParticleMix(fuseCount = 3)),
+        LevelDefinition(28, 0x1128L, 42, 31, ParticleMix(fuseCount = 4)),
+        LevelDefinition(29, 0x1129L, 42, 32, ParticleMix(boosterCount = 2, fuseCount = 3)),
+        LevelDefinition(30, 0x1130L, 44, 33, ParticleMix(boosterCount = 3, fuseCount = 4)),
+        LevelDefinition(31, 0x1131L, 42, 31, ParticleMix(anchorCount = 3)),
+        LevelDefinition(32, 0x1132L, 42, 32, ParticleMix(anchorCount = 4)),
+        LevelDefinition(33, 0x1133L, 44, 33, ParticleMix(anchorCount = 5)),
+        LevelDefinition(34, 0x1134L, 44, 34, ParticleMix(boosterCount = 2, anchorCount = 4)),
+        LevelDefinition(35, 0x1135L, 46, 35, ParticleMix(fuseCount = 2, anchorCount = 5)),
+        LevelDefinition(36, 0x1136L, 44, 33, ParticleMix(boosterCount = 3, fuseCount = 3, anchorCount = 3)),
+        LevelDefinition(37, 0x1137L, 46, 34, ParticleMix(boosterCount = 4, fuseCount = 3, anchorCount = 4)),
+        LevelDefinition(38, 0x1138L, 46, 35, ParticleMix(boosterCount = 4, fuseCount = 4, anchorCount = 4)),
+        LevelDefinition(39, 0x1139L, 48, 36, ParticleMix(boosterCount = 5, fuseCount = 4, anchorCount = 5)),
+        LevelDefinition(40, 0x1140L, 48, 37, ParticleMix(boosterCount = 5, fuseCount = 5, anchorCount = 5)),
     )
 
     init {
