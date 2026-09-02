@@ -33,7 +33,7 @@ Particle types are Standard, Booster, Fuse and Anchor. Level/replay completion r
 
 ## Campaign
 
-The 0.9.0 build retains the complete **60-level deterministic campaign** across six chapters: Impulse, Momentum, Boost, Control, Resonance and Chaos. Stable seeds, scores, stars, progression, migration from former 20/40-level campaigns and DataStore keys remain compatible with 0.8.0.
+IMPULSE 1.0.0 contains the complete **60-level deterministic campaign** across six chapters: Impulse, Momentum, Boost, Control, Resonance and Chaos. Stable seeds, scores, stars, progression, migration from former 20/40-level campaigns and DataStore keys remain compatible with previous releases.
 
 ## Replayability
 
@@ -51,9 +51,18 @@ Replay result cards expose a user-initiated `ACTION_SEND` text share through the
 
 ## Achievements and statistics
 
-Achievements are derived from local state rather than stored separately. 0.9.0 contains **25 achievements** in Journey, Mastery, Chain, Endurance and Replay groups. New Replay achievements cover first/seventh completed Daily challenge and five/ten cleared Endless rounds.
+Achievements are derived from local state rather than stored separately. IMPULSE 1.0.0 contains **25 achievements** in Journey, Mastery, Chain, Endurance and Replay groups.
 
 Replay attempts also feed the existing aggregate attempts, successes, triggered-particle and chain-depth statistics. Replay-specific local statistics include Endless best round/score and number of completed Daily challenges.
+
+## Audiovisual and accessibility
+
+- Procedural ambient music is synthesized locally at runtime and subtly reacts to chain depth.
+- Music can be disabled independently from gameplay sound effects.
+- Reduced Effects lowers visual intensity without altering simulation or hiding core gameplay information.
+- High Contrast is persistent and strengthens field framing, reaction waves, particle outlines and special-particle geometry.
+- Booster, Fuse and Anchor remain distinguishable through geometry as well as color.
+- English and Russian settings expose the same accessibility controls.
 
 ## Navigation
 
@@ -63,7 +72,8 @@ After the branded splash, the main menu exposes Continue, New game, Endless, Dai
 
 - `game/` owns deterministic simulation, campaign definitions and replay challenge generation.
 - `progress/` owns DataStore state, statistics and derived achievements.
-- `ui/` owns Compose screens, rendering and Android Sharesheet integration.
+- `ui/` owns Compose screens, rendering, visual accessibility and Android Sharesheet integration.
+- `feedback/` owns game audio and adaptive ambient synthesis.
 - Replay challenge generation configures the existing `GameEngine`; it does not fork or duplicate physics.
 - Campaign and replay persistence are additive and device-local.
 
@@ -73,27 +83,24 @@ After the branded splash, the main menu exposes Continue, New game, Endless, Dai
 - Stable Daily challenge for a given local date.
 - Endless traversal must cover all 40 replay fields before repeating.
 - Endless challenge definitions must remain structurally valid while targets escalate.
-- Campaign deterministic regression coverage remains unchanged.
-- Unit-test replay generation and achievements.
-- Runtime-test main-menu replay navigation on API 37.
+- Deterministic winning-opening regression coverage for expanded campaign content.
+- Unit-test replay generation, scoring, progression, migrations, special particles and achievements.
+- Runtime-test menu/navigation, settings and gameplay flows on API 37.
 - Run Android lint, debug/release builds, CodeQL, Semgrep and Gitleaks in CI.
 - No unnecessary permissions, SDKs, exported components or cleartext network traffic.
 
 ## Version direction
 
-### 0.9.0 · Replayability
+### 1.0.0 · Production baseline
 
-- Endless.
-- Daily Impulse.
-- Share Result.
-- Replay statistics and achievements.
+- 60-level Campaign and deterministic replay modes.
+- Endless, Daily Impulse and Share Result.
+- 25 local achievements and statistics.
+- Adaptive procedural ambient music.
+- Reduced Effects and persistent High Contrast accessibility modes.
+- Full regression/security/release validation.
 
-### 1.0.0
-
-- Final balance pass across campaign and replay modes.
-- Audiovisual polish and game-feel tuning.
-- Dedicated accessibility pass.
-- Regression hardening and production release validation.
+The original roadmap through 1.0.0 is complete. Future versions may add content or polish while preserving the one-tap core and offline privacy boundary.
 
 ## Repository policy
 
