@@ -1,4 +1,5 @@
 <resources>
-    <string name="about_website">Сайт приложения — stanleyll0yd.github.io</string>
+    <string name="about_website">Сайт приложения</string>
+    <string name="about_website_url">stanleyll0yd.github.io</string>
     <string name="about_privacy">Политика конфиденциальности</string>
 </resources>
