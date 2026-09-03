@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.1 - 2026-09-03
+
+### Changed
+
+- About now links ordinary users to the IMPULSE product website instead of GitHub.
+- The app website entry is presented as a two-line block: `App website` / `Сайт приложения` with `stanleyll0yd.github.io` on the following line while opening the full IMPULSE product page.
+- Added a dedicated Privacy policy / Политика конфиденциальности entry linking to the IMPULSE privacy page on the product website.
+- Android version is now 1.0.1 with `versionCode 13`.
+
 ## 1.0.0 - 2026-09-02
 
 ### Added
