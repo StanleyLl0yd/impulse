@@ -1,5 +1,7 @@
 package com.sl.impulse.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -176,6 +179,7 @@ fun AchievementsScreen(playerState: PlayerState, onBack: () -> Unit) {
 
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
     MenuBackground {
         MenuPanel(stringResource(R.string.about_title), "about-screen", onBack) {
             Text(
@@ -185,6 +189,40 @@ fun AboutScreen(onBack: () -> Unit) {
                 lineHeight = 22.sp,
                 textAlign = TextAlign.Center,
             )
+            TextButton(
+                onClick = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(IMPULSE_WEBSITE)))
+                },
+                modifier = Modifier.fillMaxWidth().testTag("about-website"),
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.about_website),
+                        color = ParticleGlow,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = stringResource(R.string.about_website_url),
+                        color = ParticleCore.copy(alpha = 0.68f),
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+            TextButton(
+                onClick = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(IMPULSE_PRIVACY)))
+                },
+                modifier = Modifier.fillMaxWidth().testTag("about-privacy"),
+            ) {
+                Text(
+                    text = stringResource(R.string.about_privacy),
+                    color = ParticleCore.copy(alpha = 0.82f),
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                )
+            }
             Text(
                 text = stringResource(R.string.about_copyright),
                 color = ParticleCore.copy(alpha = 0.56f),
@@ -289,3 +327,6 @@ private fun MenuPanel(title: String, testTag: String, onBack: () -> Unit, conten
         }
     }
 }
+
+private const val IMPULSE_WEBSITE = "https://stanleyll0yd.github.io/apps/impulse/"
+private const val IMPULSE_PRIVACY = "https://stanleyll0yd.github.io/apps/impulse/privacy/"

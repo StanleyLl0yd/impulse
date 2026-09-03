@@ -68,6 +68,8 @@ Replay attempts also feed the existing aggregate attempts, successes, triggered-
 
 After the branded splash, the main menu exposes Continue, New game, Endless, Daily Impulse, Achievements, About and Exit. Android Back from campaign or replay returns to the menu. Campaign selection remains chapter-aware and isolated from Replay mode state.
 
+The About screen keeps ordinary users on the public IMPULSE website rather than GitHub. Its app website entry opens `https://stanleyll0yd.github.io/apps/impulse/`, and its Privacy policy entry opens `https://stanleyll0yd.github.io/apps/impulse/privacy/`.
+
 ## Architecture
 
 - `game/` owns deterministic simulation, campaign definitions and replay challenge generation.
@@ -99,6 +101,12 @@ After the branded splash, the main menu exposes Continue, New game, Endless, Dai
 - Adaptive procedural ambient music.
 - Reduced Effects and persistent High Contrast accessibility modes.
 - Full regression/security/release validation.
+
+### 1.0.1 · About polish
+
+- Public app website and privacy destinations replace GitHub-facing About navigation for ordinary users.
+- The app website entry uses a two-line label/domain presentation in English and Russian.
+- Gameplay, progression, replay modes, achievements, statistics, audio, accessibility and offline architecture remain unchanged.
 
 The original roadmap through 1.0.0 is complete. Future versions may add content or polish while preserving the one-tap core and offline privacy boundary.
 

@@ -55,6 +55,8 @@ class ImpulseLaunchTest {
         advanceUntilExists("menu-about")
         composeRule.onNodeWithTag("menu-about").performClick()
         advanceUntilExists("about-screen")
+        composeRule.onNodeWithTag("about-website").assertExists()
+        composeRule.onNodeWithTag("about-privacy").assertExists()
     }
 
     @Test
