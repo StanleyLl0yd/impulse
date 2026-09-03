@@ -58,54 +58,20 @@ Replay attempts also feed the existing aggregate attempts, successes, triggered-
 ## Audiovisual and accessibility
 
 - Procedural ambient music is synthesized locally at runtime and subtly reacts to chain depth.
-- Music can be disabled independently from gameplay sound effects.
-- Reduced Effects lowers visual intensity without altering simulation or hiding core gameplay information.
-- High Contrast is persistent and strengthens field framing, reaction waves, particle outlines and special-particle geometry.
-- Booster, Fuse and Anchor remain distinguishable through geometry as well as color.
-- English and Russian settings expose the same accessibility controls.
+- Music has a separate persistent setting from game sound.
+- High Contrast and Reduced Effects are independent persistent accessibility controls.
+- High Contrast strengthens field, wave and particle readability without changing gameplay mechanics.
+- English and Russian UI remain first-class supported localizations.
 
-## Navigation
+## About and public product pages
 
-After the branded splash, the main menu exposes Continue, New game, Endless, Daily Impulse, Achievements, About and Exit. Android Back from campaign or replay returns to the menu. Campaign selection remains chapter-aware and isolated from Replay mode state.
+The in-app About screen sends ordinary users only to public product pages on `stanleyll0yd.github.io`:
 
-## Architecture
+- App website: `https://stanleyll0yd.github.io/apps/impulse/`
+- Privacy policy: `https://stanleyll0yd.github.io/apps/impulse/privacy/`
 
-- `game/` owns deterministic simulation, campaign definitions and replay challenge generation.
-- `progress/` owns DataStore state, statistics and derived achievements.
-- `ui/` owns Compose screens, rendering, visual accessibility and Android Sharesheet integration.
-- `feedback/` owns game audio and adaptive ambient synthesis.
-- Replay challenge generation configures the existing `GameEngine`; it does not fork or duplicate physics.
-- Campaign and replay persistence are additive and device-local.
+The About screen does not expose a GitHub destination.
 
-## Quality requirements
+## Release baseline
 
-- Fixed 60 Hz deterministic simulation across modes.
-- Stable Daily challenge for a given local date.
-- Endless traversal must cover all 40 replay fields before repeating.
-- Endless challenge definitions must remain structurally valid while targets escalate.
-- Deterministic winning-opening regression coverage for expanded campaign content.
-- Unit-test replay generation, scoring, progression, migrations, special particles and achievements.
-- Runtime-test menu/navigation, settings and gameplay flows on API 37.
-- Run Android lint, debug/release builds, CodeQL, Semgrep and Gitleaks in CI.
-- No unnecessary permissions, SDKs, exported components or cleartext network traffic.
-
-## Version direction
-
-### 1.0.0 · Production baseline
-
-- 60-level Campaign and deterministic replay modes.
-- Endless, Daily Impulse and Share Result.
-- 25 local achievements and statistics.
-- Adaptive procedural ambient music.
-- Reduced Effects and persistent High Contrast accessibility modes.
-- Full regression/security/release validation.
-
-The original roadmap through 1.0.0 is complete. Future versions may add content or polish while preserving the one-tap core and offline privacy boundary.
-
-## Repository policy
-
-`main` is protected, PR-based and squash-only. CI must pass before merge. GitHub Actions are pinned to immutable commit SHAs. Dependency, static-analysis and secret-scanning automation remains part of the baseline.
-
-## Release policy
-
-Official releases are tag-driven and must match `versionName`. CI validates the tagged `main` commit, restores the owner-provided signing key only in protected runner storage, signs and verifies APK/AAB, generates SHA-256 checksums and provenance attestations, publishes the GitHub Release, then removes temporary signing material.
+IMPULSE 1.0.1 uses `versionCode 13`. The patch release changes only About/product-page presentation and links; gameplay, progression, replay modes, achievements, statistics, audio, accessibility behavior, persistence and offline architecture remain unchanged from 1.0.0.
