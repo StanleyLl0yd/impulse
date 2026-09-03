@@ -6,7 +6,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.espresso.Espresso.pressBack
-import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
 
@@ -58,7 +57,6 @@ class ImpulseLaunchTest {
         advanceUntilExists("about-screen")
         composeRule.onNodeWithTag("about-website").assertExists()
         composeRule.onNodeWithTag("about-privacy").assertExists()
-        captureAboutScreenshot()
     }
 
     @Test
@@ -117,13 +115,6 @@ class ImpulseLaunchTest {
         composeRule.onNodeWithTag("retry").performClick()
         composeRule.mainClock.advanceTimeByFrame()
         composeRule.onNodeWithTag("game-hint").assertExists()
-    }
-
-    private fun captureAboutScreenshot() {
-        composeRule.waitForIdle()
-        InstrumentationRegistry.getInstrumentation().uiAutomation
-            .executeShellCommand("screencap -p /sdcard/about-screen.png")
-            .close()
     }
 
     private fun enterNewGame() {
