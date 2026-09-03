@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.2 - 2026-09-03
+
+### Changed
+
+- Replaced the launcher icon with the approved raster chain-reaction artwork based on the splash-screen visual language.
+- Removed the previous full-color VectorDrawable launcher foreground; the standard adaptive icon now uses raster artwork directly.
+- Removed the superseded monochrome themed-icon layer because it represented the previous launcher emblem rather than the new approved identity.
+- Android version is now 1.0.2 with `versionCode 14`.
+
 ## 1.0.1 - 2026-09-03
 
 ### Changed
