@@ -195,12 +195,20 @@ fun AboutScreen(onBack: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth().testTag("about-website"),
             ) {
-                Text(
-                    text = stringResource(R.string.about_website),
-                    color = ParticleGlow,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.about_website),
+                        color = ParticleGlow,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = stringResource(R.string.about_website_url),
+                        color = ParticleCore.copy(alpha = 0.68f),
+                        fontSize = 11.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
             TextButton(
                 onClick = {
