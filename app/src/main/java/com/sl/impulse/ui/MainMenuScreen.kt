@@ -195,19 +195,25 @@ fun AboutScreen(onBack: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth().testTag("about-website"),
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = stringResource(R.string.about_website),
-                        color = ParticleGlow,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = stringResource(R.string.about_website_url),
-                        color = ParticleCore.copy(alpha = 0.68f),
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.about_website),
+                    color = ParticleGlow,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            TextButton(
+                onClick = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(IMPULSE_PRIVACY)))
+                },
+                modifier = Modifier.fillMaxWidth().testTag("about-privacy"),
+            ) {
+                Text(
+                    text = stringResource(R.string.about_privacy),
+                    color = ParticleCore.copy(alpha = 0.82f),
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                )
             }
             Text(
                 text = stringResource(R.string.about_copyright),
@@ -315,3 +321,4 @@ private fun MenuPanel(title: String, testTag: String, onBack: () -> Unit, conten
 }
 
 private const val IMPULSE_WEBSITE = "https://stanleyll0yd.github.io/apps/impulse/"
+private const val IMPULSE_PRIVACY = "https://stanleyll0yd.github.io/apps/impulse/privacy/"
