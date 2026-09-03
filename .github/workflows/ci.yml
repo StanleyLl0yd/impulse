@@ -138,6 +138,12 @@ jobs:
       - name: Run Android tests
         run: ./gradlew connectedDebugAndroidTest --stacktrace
 
+      - name: Collect UI screenshots
+        if: always()
+        run: |
+          mkdir -p app/build/ui-screenshots
+          adb pull /sdcard/Android/data/com.sl.impulse/files/about-screen.png app/build/ui-screenshots/about-screen.png || true
+
       - name: Upload Android test reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -146,6 +152,7 @@ jobs:
           path: |
             app/build/reports/androidTests/connected/
             app/build/outputs/androidTest-results/connected/
+            app/build/ui-screenshots/
           if-no-files-found: ignore
           retention-days: 14
 
