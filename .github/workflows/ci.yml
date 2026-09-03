@@ -142,7 +142,7 @@ jobs:
         if: always()
         run: |
           mkdir -p app/build/ui-screenshots
-          adb pull /sdcard/Android/data/com.sl.impulse/files/about-screen.png app/build/ui-screenshots/about-screen.png || true
+          adb pull /sdcard/about-screen.png app/build/ui-screenshots/about-screen.png || true
 
       - name: Upload Android test reports
         if: always()
