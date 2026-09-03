@@ -1,6 +1,5 @@
 package com.sl.impulse
 
-import android.graphics.Bitmap
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -8,8 +7,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.platform.app.InstrumentationRegistry
-import java.io.File
-import java.io.FileOutputStream
 import org.junit.Rule
 import org.junit.Test
 
@@ -123,12 +120,9 @@ class ImpulseLaunchTest {
 
     private fun captureAboutScreenshot() {
         composeRule.waitForIdle()
-        val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
-        val outputDir = composeRule.activity.getExternalFilesDir(null) ?: error("External files directory unavailable")
-        FileOutputStream(File(outputDir, "about-screen.png")).use { output ->
-            check(screenshot.compress(Bitmap.CompressFormat.PNG, 100, output))
-        }
-        screenshot.recycle()
+        InstrumentationRegistry.getInstrumentation().uiAutomation
+            .executeShellCommand("screencap -p /sdcard/about-screen.png")
+            .close()
     }
 
     private fun enterNewGame() {
