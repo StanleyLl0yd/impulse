@@ -108,6 +108,13 @@ The About screen keeps ordinary users on the public IMPULSE website rather than 
 - The app website entry uses a two-line label/domain presentation in English and Russian.
 - Gameplay, progression, replay modes, achievements, statistics, audio, accessibility and offline architecture remain unchanged.
 
+### 1.0.2 · Launcher identity
+
+- The Android launcher icon uses the approved raster chain-reaction artwork based on the game's splash-screen visual language.
+- The previous full-color VectorDrawable launcher foreground is removed; standard adaptive-icon presentation now uses raster artwork directly.
+- The superseded monochrome themed-icon layer is removed so Android does not substitute an old emblem for the new approved identity.
+- Gameplay, progression, replay modes, achievements, statistics, audio, accessibility and offline architecture remain unchanged.
+
 The original roadmap through 1.0.0 is complete. Future versions may add content or polish while preserving the one-tap core and offline privacy boundary.
 
 ## Repository policy
