@@ -41,6 +41,9 @@ jobs:
             exit 1
           fi
 
+      - name: Verify launcher raster integrity
+        run: python3 scripts/verify_launcher_asset.py
+
       - name: Set up Android build environment
         uses: ./.github/actions/android-gradle-setup
         with:
