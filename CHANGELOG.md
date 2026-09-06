@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.0.3 - 2026-09-06
+
+### Fixed
+
+- Replaced the truncated launcher WebP accidentally published in 1.0.2 with the exact approved 432×432 canonical PNG and use that PNG directly as the Android launcher foreground.
+- Added repository and Android runtime regression checks so corrupt or undecodable launcher artwork cannot pass CI unnoticed.
+- Release packaging now validates the launcher PNG contained in the generated AAB before publication.
+- Android version is now 1.0.3 with `versionCode 15`.
+
 ## 1.0.2 - 2026-09-03
 
 ### Changed
