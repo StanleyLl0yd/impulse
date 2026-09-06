@@ -42,6 +42,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify launcher raster integrity
+        run: python3 scripts/verify_launcher_asset.py
+
       - name: Validate tag source and app version
         run: |
           set -euo pipefail
@@ -205,6 +208,11 @@ jobs:
           source_aab="app/build/outputs/bundle/release/app-release.aab"
           test -s "$source_apk"
           test -s "$source_aab"
+
+          packaged_launcher="$RUNNER_TEMP/aab-launcher.png"
+          unzip -p "$source_aab" base/res/drawable-nodpi-v4/ic_launcher_foreground.png > "$packaged_launcher"
+          test -s "$packaged_launcher"
+          python3 scripts/verify_launcher_asset.py "$packaged_launcher"
 
           aapt="$(find "$ANDROID_HOME/build-tools" -type f -name aapt -print | sort -V | tail -1)"
           test -n "$aapt"

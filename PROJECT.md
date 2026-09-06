@@ -115,6 +115,14 @@ The About screen keeps ordinary users on the public IMPULSE website rather than 
 - The superseded monochrome themed-icon layer is removed so Android does not substitute an old emblem for the new approved identity.
 - Gameplay, progression, replay modes, achievements, statistics, audio, accessibility and offline architecture remain unchanged.
 
+### 1.0.3 · Launcher integrity
+
+- Restores the exact approved 432×432 launcher artwork from its canonical PNG after the 1.0.2 WebP resource was found to be truncated.
+- The canonical PNG is stored unchanged and is also used directly as the Android launcher foreground, avoiding another raster transcoding step.
+- CI validates PNG structure, CRCs, compressed pixel data and dimensions, while Android runtime tests decode and render the adaptive launcher icon.
+- Release packaging validates the launcher PNG actually contained in the generated AAB before publication.
+- Gameplay and all other product behavior remain unchanged.
+
 The original roadmap through 1.0.0 is complete. Future versions may add content or polish while preserving the one-tap core and offline privacy boundary.
 
 ## Repository policy
