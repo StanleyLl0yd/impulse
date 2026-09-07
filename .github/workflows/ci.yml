@@ -162,10 +162,30 @@ jobs:
         if: failure()
         run: cat "$RUNNER_TEMP/emulator.log" || true
 
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          vulnerability-check: true
+          license-check: true
+          comment-summary-in-pr: never
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 120
+          show-patched-versions: true
+
   verify:
     name: Verify
     if: always()
-    needs: [build, android-tests]
+    needs: [build, android-tests, dependency-review]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions: {}
@@ -175,6 +195,14 @@ jobs:
         env:
           BUILD_RESULT: ${{ needs.build.result }}
           ANDROID_TEST_RESULT: ${{ needs.android-tests.result }}
+          DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
+          set -euo pipefail
           test "$BUILD_RESULT" = "success"
           test "$ANDROID_TEST_RESULT" = "success"
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            test "$DEPENDENCY_REVIEW_RESULT" = "success"
+          else
+            test "$DEPENDENCY_REVIEW_RESULT" = "skipped"
+          fi
