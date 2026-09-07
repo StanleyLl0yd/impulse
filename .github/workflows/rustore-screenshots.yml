@@ -50,7 +50,13 @@ jobs:
 
       - name: Capture application screenshots
         run: |
-          ./gradlew connectedDebugAndroidTest             -Pandroid.testInstrumentationRunnerArguments.class=com.sl.impulse.RuStoreScreenshotTest             --stacktrace
+          set -euo pipefail
+          ./gradlew assembleDebug assembleDebugAndroidTest --stacktrace
+          adb install -r app/build/outputs/apk/debug/app-debug.apk
+          adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+          adb shell am instrument -w \
+            -e class com.sl.impulse.RuStoreScreenshotTest \
+            com.sl.impulse.test/androidx.test.runner.AndroidJUnitRunner
           mkdir -p "$RUNNER_TEMP/rustore"
           for name in 00_menu.png 01_gameplay.png 02_campaign.png 03_endless.png 04_daily.png 05_achievements.png 06_settings.png; do
             adb exec-out run-as com.sl.impulse cat "files/rustore/$name" > "$RUNNER_TEMP/rustore/$name"
