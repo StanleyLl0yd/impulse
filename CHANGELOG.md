@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Rebalanced all 60 deterministic campaign levels from measured spatial/time opening samples so the first chapter is deliberately forgiving and average difficulty tightens across later chapters.
+- Reduced early completion targets that previously made the opening campaign disproportionately punishing and tightened late-game targets that exposed overly broad winning regions.
+- Re-seeded three late outlier fields whose chain topology remained too self-solving even at near-perfect completion targets.
+
+### Quality
+
+- Replaced brittle single-coordinate winning-opening fixtures with a deterministic 80-sample-per-level difficulty audit covering tap position and timing.
+- CI now requires every campaign level to retain sampled winning openings, chapter-average success windows to tighten progressively, and late chapters to avoid broad trivial solutions.
+
 ## 1.0.3 - 2026-09-06
 
 ### Fixed
