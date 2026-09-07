@@ -22,8 +22,8 @@ android {
         applicationId = "com.sl.impulse"
         minSdk = 26
         targetSdk = 37
-        versionCode = 15
-        versionName = "1.0.3"
+        versionCode = 16
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
