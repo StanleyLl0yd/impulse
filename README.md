@@ -22,7 +22,7 @@ A minimalist one-touch chain-reaction puzzle for Android.
 
 Particles drift across a near-black field. You get one tap. That tap creates an expanding impulse; every particle it reaches can become another wave, and every new wave can continue the reaction. The entire attempt is decided by that single moment.
 
-Current source version: **1.0.3** (`versionCode 15`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
+Current source version: **1.1.0** (`versionCode 16`) · Min SDK: **26 (Android 8.0)** · Target SDK: **37**
 
 ## ⚡ The idea
 
@@ -67,7 +67,7 @@ Current source version: **1.0.3** (`versionCode 15`) · Min SDK: **26 (Android 8
 | V · Resonance | 41–50 | Dense coordinated combinations |
 | VI · Chaos | 51–60 | Full-system mastery |
 
-Levels use stable seeds, so retries reproduce the same logical challenge. Expanded campaign content is protected by deterministic winning-opening regression tests.
+Levels use stable seeds, so retries reproduce the same logical challenge. Campaign balance is protected by deterministic difficulty regression tests that sample tap position and timing across all 60 levels.
 
 ## ♾ Replayability
 
