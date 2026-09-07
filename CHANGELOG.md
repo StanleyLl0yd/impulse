@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 1.1.0 - 2026-09-07
+
 ### Changed
 
 - Rebalanced all 60 deterministic campaign levels from measured spatial/time opening samples so the first chapter is deliberately forgiving and average difficulty tightens across later chapters.
 - Reduced early completion targets that previously made the opening campaign disproportionately punishing and tightened late-game targets that exposed overly broad winning regions.
 - Re-seeded three late outlier fields whose chain topology remained too self-solving even at near-perfect completion targets.
+- Android version is now 1.1.0 with `versionCode 16`.
 
 ### Quality
 
