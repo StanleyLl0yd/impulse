@@ -510,3 +510,16 @@ The final goal is a codebase containing only the complexity required to implemen
 - If an older icon in another format is currently canonical, keep it until the project owner explicitly supplies a replacement PNG as the new app icon. Once supplied, that PNG becomes the canonical source and the asset pipeline should derive required icons from it rather than converting it to a vector source.
 - For IMPULSE, the canonical launcher artwork is `assets/app-icon/impulse-launcher-canonical.png`; the Android launcher foreground must remain a raster derivative of that exact file, and using the canonical PNG directly is preferred when no platform transformation is required.
 - CI and release workflows must validate launcher raster integrity and Android runtime decoding so truncated or corrupt image resources cannot be published.
+
+## GitHub security baseline
+
+- Keep every non-local GitHub Action pinned to an immutable full 40-character commit SHA; retain a nearby version comment for maintainability.
+- Pin workflow container images by SHA-256 digest.
+- Do not use `pull_request_target` for normal PR validation. Never execute untrusted PR code with write permissions or secrets.
+- Default workflow permissions to `permissions: {}` or read-only access and grant write scopes only to the exact job that needs them.
+- Restrict `id-token: write` and attestation permissions to the release provenance job.
+- Keep Dependency Review, CodeQL, Semgrep, Gitleaks, and the aggregate Android `Verify` gate merge-blocking.
+- Do not commit signing material, credentials, tokens, `.env`, `local.properties`, service-account files, or private keys.
+- Preserve immutable `v*` release tags and the protected squash-only linear `main` ruleset.
+- Run `python3 scripts/verify_ci_supply_chain.py` when changing `.github/workflows/**` or `.github/actions/**`.
+
