@@ -21,7 +21,9 @@ for root in ROOTS:
             errors.append(f"{path}: checkout credentials must not persist")
         if "secrets: inherit" in text:
             errors.append(f"{path}: secrets inheritance is forbidden")
-        if not re.search(r"(?m)^permissions:\s*(?:\{\}|$)", text):
+        if path.parent == Path(".github/workflows") and not re.search(
+            r"(?m)^permissions:\s*(?:\{\}|$)", text
+        ):
             errors.append(f"{path}: explicit workflow permissions are required")
 
         lines = text.splitlines()
