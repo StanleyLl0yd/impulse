@@ -21,8 +21,13 @@ key.properties
 keystore.properties
 secrets.properties
 *.p12
+*.pfx
+*.pkcs12
 *.pem
 *.key
+service-account*.json
+service_account*.json
+credentials*.json
 
 .env
 .env.*
