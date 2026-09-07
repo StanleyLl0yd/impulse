@@ -9,8 +9,7 @@ on:
   schedule:
     - cron: '17 4 * * 1'
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: android-ci-${{ github.workflow }}-${{ github.ref }}
@@ -21,12 +20,17 @@ jobs:
     name: Build checks
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Verify CI supply-chain policy
+        run: python3 scripts/verify_ci_supply_chain.py
 
       - name: Verify application identity
         run: |
@@ -84,6 +88,8 @@ jobs:
     name: Android runtime tests (API ${{ matrix.api-level }})
     runs-on: ubuntu-24.04
     timeout-minutes: 35
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -162,6 +168,7 @@ jobs:
     needs: [build, android-tests]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    permissions: {}
 
     steps:
       - name: Enforce verification results
