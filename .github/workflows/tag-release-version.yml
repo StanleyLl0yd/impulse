@@ -12,17 +12,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  tag:
-    name: Create verified release tag
+  prepare:
+    name: Validate release metadata
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
-      actions: write
-      contents: write
+      actions: read
+      contents: read
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      exists: ${{ steps.existing.outputs.exists }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -107,13 +110,25 @@ jobs:
           echo "Timed out waiting for required main verification workflows." >&2
           exit 1
 
+  tag:
+    name: Create verified release tag
+    needs: prepare
+    if: needs.prepare.outputs.exists == 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
       - name: Create tag and start release
-        if: steps.existing.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
         run: |
           set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
           gh api --method POST \
             "/repos/$GITHUB_REPOSITORY/git/refs" \
             -f ref="refs/tags/$RELEASE_TAG" \
