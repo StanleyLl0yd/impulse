@@ -123,6 +123,14 @@ The About screen keeps ordinary users on the public IMPULSE website rather than 
 - Release packaging validates the launcher PNG actually contained in the generated AAB before publication.
 - Gameplay and all other product behavior remain unchanged.
 
+### 1.1.0 · Campaign balance
+
+- Rebalances all 60 campaign levels using measured spatial/time opening samples rather than target ratios alone.
+- The opening chapter is intentionally more forgiving, while average sampled success windows tighten progressively through Momentum, Boost, Control, Resonance and Chaos.
+- Late self-solving outliers are tightened, including three deterministic fields that required new seeds.
+- CI samples 80 tap position/timing combinations per campaign level and guards solvability plus the intended chapter-by-chapter difficulty curve.
+- Core one-tap mechanics, progression storage, achievements, replay architecture, offline privacy boundary and release/security baseline remain unchanged.
+
 The original roadmap through 1.0.0 is complete. Future versions may add content or polish while preserving the one-tap core and offline privacy boundary.
 
 ## Repository policy
