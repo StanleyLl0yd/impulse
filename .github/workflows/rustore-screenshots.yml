@@ -52,7 +52,7 @@ jobs:
         run: |
           ./gradlew connectedDebugAndroidTest             -Pandroid.testInstrumentationRunnerArguments.class=com.sl.impulse.RuStoreScreenshotTest             --stacktrace
           mkdir -p "$RUNNER_TEMP/rustore"
-          adb pull /sdcard/Android/data/com.sl.impulse/files/rustore/. "$RUNNER_TEMP/rustore/"
+          adb exec-out run-as com.sl.impulse tar -C files/rustore -cf - . | tar -C "$RUNNER_TEMP/rustore" -xf -
 
       - name: Upload screenshots
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
