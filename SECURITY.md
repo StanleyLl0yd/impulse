@@ -55,7 +55,7 @@ IMPULSE minimizes attack surface:
 - owner-controlled release signing key supplied outside the repository;
 - release signing material provided only through GitHub Environment secrets;
 - release APK/AAB signature and certificate verification;
-- immutable release intent, checksums, OIDC-backed artifact attestations, and provenance;
+- validated release intent, checksums, OIDC-backed artifact attestations, and provenance;
 - SHA-pinned GitHub Actions and digest-pinned workflow containers;
 - CodeQL, Semgrep, Gitleaks, Dependency Review, Qodana, and Dependabot;
 - protected squash-only linear `main` with required security gates.
