@@ -1,19 +1,65 @@
 # Security baseline
 
-The repository baseline combines the strongest practices already used across the maintainer's Android projects and tightens them for a new application.
+IMPULSE is the reference security baseline for the maintainer's Android repositories. Controls are selected for practical risk reduction without adding approval ceremony that provides little value to a single-maintainer project.
 
-- Owner-provided release signing key; no keystore or local setup script is stored in the repository.
-- GitHub Environment secrets for release material.
-- Tag-driven release intent.
-- APK and AAB signature/fingerprint verification.
-- SHA-256 release checksums and GitHub artifact attestations.
-- Protected squash-only `main` with required CI.
-- GitHub Actions pinned by commit SHA with `persist-credentials: false`.
-- Least-privilege workflow permissions.
-- Gradle wrapper validation.
-- Android unit, lint, build and emulator tests.
-- CodeQL, Semgrep, Gitleaks and Qodana.
-- Dependabot for Gradle and GitHub Actions.
-- GitHub dependency and security features are part of the repository baseline.
-- No baseline internet permission, dangerous runtime permissions, analytics or advertising SDKs.
-- `android:usesCleartextTraffic="false"` and no unnecessary exported components.
+## Repository protection
+
+The target repository ruleset baseline is:
+
+- default branch protection for `~DEFAULT_BRANCH`;
+- deletion and non-fast-forward updates forbidden;
+- squash-only pull requests and linear history;
+- required signed commits;
+- required conversation resolution;
+- strict required status checks;
+- release tags matching `refs/tags/v*` are immutable after creation;
+- CodeQL code-scanning enforcement at `medium_or_higher` security severity with error-level merge blocking.
+
+Required merge gates:
+
+- `Verify`;
+- `Analyze Java and Kotlin`;
+- `Semgrep`;
+- `Gitleaks`;
+- `Dependency Review`.
+
+Qodana remains scheduled/manual rather than required because an external-service or tooling failure must not routinely deadlock development.
+
+## CI/CD supply chain
+
+- Every non-local GitHub Action is pinned to a full 40-character commit SHA.
+- Human-readable version comments are retained next to pins.
+- Workflow container images are pinned by immutable SHA-256 digest.
+- `pull_request_target`, persisted checkout credentials, and inherited reusable-workflow secrets are forbidden by repository policy checks.
+- Dependabot updates both Gradle dependencies and SHA-pinned GitHub Actions.
+- Workflow permissions default to `permissions: {}` or read-only access.
+- Write permissions are isolated to the smallest release-orchestration/publish jobs.
+- OIDC `id-token: write` and `attestations: write` are isolated to the artifact-attestation job.
+
+## Analysis and dependency security
+
+- CodeQL advanced setup for Java/Kotlin with `security-extended` queries.
+- Semgrep security-audit and secrets rules.
+- Gitleaks full-history secret scanning.
+- Official GitHub Dependency Review on pull requests, failing for newly introduced high/critical known vulnerabilities while retaining license analysis.
+- Qodana JVM analysis on scheduled/manual runs.
+- Dependabot weekly updates for Gradle and GitHub Actions.
+
+## Release integrity
+
+- Owner-provided release signing key; no keystore is stored in the repository.
+- Signing material is supplied only through GitHub Environment secrets.
+- Release tag/version/application identity and monotonic `versionCode` are validated.
+- Release source must be a verified `main` commit.
+- APK and AAB signatures and expected certificate fingerprint are verified.
+- Launcher raster integrity is validated in source and inside the generated AAB.
+- SHA-256 checksums are generated and verified before publication.
+- APK and AAB receive OIDC-backed GitHub artifact attestations.
+- Existing releases are not overwritten.
+
+## Application attack surface
+
+- No baseline internet permission, dangerous runtime permissions, analytics, or advertising SDKs.
+- `android:usesCleartextTraffic="false"`.
+- No unnecessary exported components.
+- Local secret/signing files and build artifacts are ignored and additionally scanned by Gitleaks.
