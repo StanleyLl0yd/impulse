@@ -33,7 +33,7 @@ Particle types are Standard, Booster, Fuse and Anchor. Level/replay completion r
 
 ## Campaign
 
-IMPULSE 1.0.0 contains the complete **60-level deterministic campaign** across six chapters: Impulse, Momentum, Boost, Control, Resonance and Chaos. Stable seeds, scores, stars, progression, migration from former 20/40-level campaigns and DataStore keys remain compatible with previous releases.
+IMPULSE 1.0.0 contains the complete **60-level deterministic campaign** across six chapters: Impulse, Momentum, Boost, Control, Resonance and Chaos. Deterministic seeds, scores, stars, progression, migration from former 20/40-level campaigns and DataStore keys remain compatible with previous releases. Campaign balance may intentionally revise individual deterministic seeds or completion targets when measured playability shows a difficulty outlier.
 
 ## Replayability
 
@@ -85,7 +85,7 @@ The About screen keeps ordinary users on the public IMPULSE website rather than 
 - Stable Daily challenge for a given local date.
 - Endless traversal must cover all 40 replay fields before repeating.
 - Endless challenge definitions must remain structurally valid while targets escalate.
-- Deterministic winning-opening regression coverage for expanded campaign content.
+- Deterministic campaign difficulty regression coverage samples 80 spatial/time openings per level, verifies solvability, and guards the intended chapter-by-chapter difficulty curve.
 - Unit-test replay generation, scoring, progression, migrations, special particles and achievements.
 - Runtime-test menu/navigation, settings and gameplay flows on API 37.
 - Run Android lint, debug/release builds, CodeQL, Semgrep and Gitleaks in CI.
