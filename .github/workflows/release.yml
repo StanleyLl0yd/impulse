@@ -253,7 +253,7 @@ jobs:
           echo "checksum_path=$checksum_path" >> "$GITHUB_OUTPUT"
 
       - name: Attest release APK and AAB
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: |
             ${{ steps.package.outputs.apk_path }}
