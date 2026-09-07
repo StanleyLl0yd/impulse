@@ -21,7 +21,7 @@ Required merge gates:
 - `Analyze Java and Kotlin`;
 - `Semgrep`;
 - `Gitleaks`;
-- `Dependency Review`.
+- `Dependency Review` (direct ruleset target; until repository-admin ruleset mutation is available, it is also enforced transitively by the required `Verify` gate).
 
 Qodana remains scheduled/manual rather than required because an external-service or tooling failure must not routinely deadlock development.
 
