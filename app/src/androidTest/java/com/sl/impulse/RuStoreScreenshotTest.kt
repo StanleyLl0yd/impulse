@@ -74,7 +74,7 @@ class RuStoreScreenshotTest {
     private fun capture(name: String) {
         composeRule.waitForIdle()
         val bitmap = composeRule.onRoot(useUnmergedTree = true).captureToImage().asAndroidBitmap()
-        val directory = File(composeRule.activity.getExternalFilesDir(null), "rustore")
+        val directory = File(composeRule.activity.filesDir, "rustore")
         check(directory.exists() || directory.mkdirs())
         FileOutputStream(File(directory, name)).use { output ->
             check(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, output))
