@@ -1,0 +1,63 @@
+name: RuStore screenshots
+
+on:
+  push:
+    branches:
+      - assets/rustore-1.1.0
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Android test environment
+        uses: ./.github/actions/android-gradle-setup
+        with:
+          android-packages: platform-tools emulator
+          gradle-cache-read-only: true
+
+      - name: Install Android SDK and system image
+        run: |
+          sdkmanager             "platforms;android-37.0"             "build-tools;37.0.0"             "system-images;android-37.0;google_apis_ps16k;x86_64"
+
+      - name: Configure AVD home
+        run: |
+          mkdir -p "$RUNNER_TEMP/avd"
+          echo "ANDROID_AVD_HOME=$RUNNER_TEMP/avd" >> "$GITHUB_ENV"
+
+      - name: Create emulator
+        run: |
+          echo "no" | avdmanager create avd             --force             --name impulse-rustore             --package "system-images;android-37.0;google_apis_ps16k;x86_64"             --device pixel_2
+
+      - name: Start emulator
+        run: |
+          sudo chmod 666 /dev/kvm || true
+          nohup "$ANDROID_HOME/emulator/emulator"             -avd impulse-rustore             -no-window             -no-audio             -no-boot-anim             -no-snapshot             -gpu software             > "$RUNNER_TEMP/emulator.log" 2>&1 &
+          timeout 120 adb wait-for-device
+          timeout 240 bash -c 'until [[ "$(adb shell getprop sys.boot_completed | tr -d "\r")" == "1" ]]; do sleep 2; done'
+          adb shell settings put global window_animation_scale 0
+          adb shell settings put global transition_animation_scale 0
+          adb shell settings put global animator_duration_scale 0
+
+      - name: Capture application screenshots
+        run: |
+          ./gradlew connectedDebugAndroidTest             -Pandroid.testInstrumentationRunnerArguments.class=com.sl.impulse.RuStoreScreenshotTest             --stacktrace
+          mkdir -p "$RUNNER_TEMP/rustore"
+          adb pull /sdcard/Android/data/com.sl.impulse/files/rustore/. "$RUNNER_TEMP/rustore/"
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: impulse-rustore-1.1.0-screenshots
+          path: ${{ runner.temp }}/rustore/*.png
+          if-no-files-found: error
+          retention-days: 7
