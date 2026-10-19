@@ -66,7 +66,7 @@ jobs:
         run: ./gradlew lintDebug --stacktrace
 
       - name: Upload debug APK
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: impulse-debug-apk-${{ github.sha }}
           path: app/build/outputs/apk/debug/app-debug.apk
@@ -75,7 +75,7 @@ jobs:
 
       - name: Upload lint and test reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: impulse-verification-reports-${{ github.sha }}
           path: |
@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload Android test reports
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android-test-reports-api-${{ matrix.api-level }}
           path: |
